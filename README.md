@@ -228,8 +228,13 @@ the exact chat line a learn from a beast produces, and whether the
 Coverage counts the first line of each statement as found by luaparse, with
 two adjustments for how Lua reports lines: a function counts on its closing
 `end` (where the closure is created), and `local a, b` without values does not
-count (it has no instruction of its own). Both line coverage and WoW Lua LS
-type coverage are at 100%.
+count (it has no instruction of its own).
+
+Both are held at 100%: a full `npm test` fails below 100% line coverage, and
+`npm run lint` fails below 100% WoW Lua LS type coverage. So `npm run check`
+only passes when every line runs in a test and every symbol has a type. (A
+filtered `npm test detect` covers only part and is not held to it, and a
+machine without the VS Code extension skips the type check.)
 
 WoW Lua LS only prints a total for type coverage. To find what is
 unresolved, `wowlua_ls dump-types --with-stubs .` lists every name with its

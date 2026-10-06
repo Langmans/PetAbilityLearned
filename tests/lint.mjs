@@ -41,7 +41,26 @@ const binary = versions.length
     : null;
 
 if (binary && existsSync(binary)) {
-    run(`WoW Lua LS (${versions.at(-1)})`, binary, ["check", "."]);
+    const label = `WoW Lua LS (${versions.at(-1)})`;
+    console.log(color.bold(`# ${label}`));
+    // Captured rather than inherited, to read the type coverage from its summary.
+    const result = spawnSync(binary, ["check", "."], { cwd: root, encoding: "utf8" });
+    const output = `${result.stdout || ""}${result.stderr || ""}`;
+    process.stdout.write(output);
+    if (result.status === 0) {
+        console.log(color.green(`ok - ${label}`));
+    } else {
+        console.log(color.red(`not ok - ${label}`));
+        failed = true;
+    }
+    // Every symbol must resolve to a type. README > Development says how to find one that does not.
+    const typeCoverage = Number((output.match(/Type coverage:\s*([\d.]+)%/) || [])[1]);
+    if (typeCoverage === 100) {
+        console.log(color.green("ok - type coverage 100%"));
+    } else {
+        console.log(color.red(`not ok - type coverage is ${typeCoverage}%, must be 100%`));
+        failed = true;
+    }
 } else {
     console.log(color.yellow("skip - WoW Lua LS: VS Code extension tradeskillmaster.wowlua-ls not found"));
 }

@@ -99,6 +99,15 @@ for (const file of files) {
     collectCoverage(L);
 }
 
-if (!filter) coverage.report();
+// Every executable line must run in some test. A full run below 100% fails, so a new line
+// without a test cannot slip in; a filtered run covers only part and is not held to it.
+let coverageShort = false;
+if (!filter) {
+    const total = coverage.report();
+    if (total < 100) {
+        console.log(color.red(`not ok - line coverage is ${total.toFixed(1)}%, must be 100%`));
+        coverageShort = true;
+    }
+}
 console.log(`\n${color.green(`${passed} passed`)}, ${failed ? color.red(`${failed} failed`) : "0 failed"}`);
-process.exitCode = failed > 0 || files.length === 0 ? 1 : 0;
+process.exitCode = failed > 0 || files.length === 0 || coverageShort ? 1 : 0;
