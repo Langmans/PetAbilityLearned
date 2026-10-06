@@ -1,0 +1,7 @@
+{
+    "flavors": ["forever", "classic_era", "classic"],
+    "ignore": ["tests/", "node_modules/", "coverage/"],
+    "diagnostics": {
+        "enable": ["need-check-nil"]
+    }
+}

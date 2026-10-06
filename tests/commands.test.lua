@@ -1,0 +1,91 @@
+-- /pal
+
+test("/pal without a command prints the help with the current values", function()
+    local client = NewClient():login():slash("")
+    ok(client:printedContains("/pal sim"))
+    ok(client:printedContains("(now 6)"))
+    ok(client:printedContains("(now 1.00)"))
+    ok(client:printedContains("(now on)"))
+    client:slash("bogus")
+    ok(client:printedContains("Drag the splash"))
+end)
+
+test("/pal test shows the splash only, for Claw or a named spell", function()
+    local client = NewClient():login():slash("test")
+    eq(client:splashName(), "Claw")
+    eq(client.splash.Rank.text, "Rank 2", "the pet's rank")
+    client:slash("test Growl")
+    eq(client:splashName(), "Growl", "test shows anything")
+    eq(client.splash.Rank.text, "Rank 1")
+end)
+
+test("/pal test without a pet uses the client's text for rank 2", function()
+    local client = NewClient({ locale = "deDE" }):login()
+    client.pet = nil
+    client:slash("test")
+    eq(client:splashName(), "Klaue")
+    eq(client.splash.Rank.text, "Rang 2")
+end)
+
+test("/pal test on a client that knows no Claw still says something", function()
+    local client = NewClient():login()
+    client.pet = nil
+    C_Spell.GetSpellName = function() end
+    C_Spell.GetSpellSubtext = function()
+        return ""
+    end
+    C_Spell.GetSpellTexture = function() end
+    client:slash("test")
+    eq(client:splashName(), "Claw")
+    eq(client.splash.Rank.text, "Rank 2")
+end)
+
+test("/pal sim runs a learn line through the detection, even at a trainer", function()
+    local client = NewClient():login(false)
+    client:fire("TRAINER_SHOW")
+    client:slash("sim")
+    ok(client:printedContains("Simulating: You have learned a new ability: Claw (Rank 2)."))
+    client:advance(0.3)
+    eq(client:splashName(), "Claw")
+    client:slash("sim")
+    client:advance(0.3)
+    eq(#client.sounds, 2, "a repeat is not swallowed as a duplicate")
+    client:chat(client:learnLine("Bite (Rank 1)"))
+    client:advance(0.3)
+    eq(client:splashName(), "Claw", "the guards are back afterwards")
+end)
+
+test("/pal sim of a trainer ability says it is ignored", function()
+    local client = NewClient():login():slash("sim Growl")
+    ok(client:printedContains("Growl is not a pet ability learned in the wild"))
+    client:advance(1)
+    eq(client:splashName(), nil)
+end)
+
+test("/pal sim on a client without learn strings says so", function()
+    local client = NewClient({ noLearnStrings = true }):login():slash("sim")
+    ok(client:printedContains("no learn message"))
+end)
+
+test("/pal duration, scale, sound and reset", function()
+    local client = NewClient():login()
+    client:slash("duration 9.7")
+    eq(Saved().duration, 9)
+    client:slash("duration 0")
+    eq(Saved().duration, 1)
+    client:slash("scale 5")
+    eq(Saved().scale, 3)
+    client:slash("scale 0.1")
+    eq(Saved().scale, 0.3)
+    client:slash("sound")
+    eq(Saved().sound, false)
+    ok(client:printedContains("Sound off."))
+    client:slash("SOUND")
+    eq(Saved().sound, true)
+    Saved().pos = { "TOPLEFT", "BOTTOMLEFT", 1, 2 }
+    client:slash("reset")
+    eq(Saved().pos, nil)
+    client.printed = {}
+    client:slash("duration soon")
+    ok(client:printedContains("/pal duration"), "a bad number shows the help")
+end)

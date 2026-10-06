@@ -1,0 +1,14 @@
+## Interface: 16001
+## Title: PetAbilityLearned
+## Notes: Big on-screen splash when your hunter learns a Beast Training ability from a tamed pet.
+## Author: Langmans
+## Version: 1.0.0
+## SavedVariables: PetAbilityLearnedDB
+## IconTexture: Interface\Icons\Ability_Hunter_BeastTraining
+## X-License: MIT
+
+Core.lua
+Splash.lua
+Detect.lua
+Commands.lua
+Options.lua
