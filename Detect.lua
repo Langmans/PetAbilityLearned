@@ -133,6 +133,7 @@ local function Flush()
         source = source,
         -- Only when the pet out has the ability: then it is the one it came from.
         petPortrait = petSpell ~= nil,
+        familyID = petSpell and ns.PetFamilyID() or nil,
     })
 end
 

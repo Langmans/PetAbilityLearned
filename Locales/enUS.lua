@@ -15,10 +15,13 @@ ns.Locales.enUS = {
         SPLASH_FROM_PET = "%s has taught you %s.",
         SPLASH_TEACH = "Teach it to your pet from the Beast Training window.",
 
-        -- /pal. STATUS: duration in seconds, scale, sound on/off, debug on/off, the command list.
+        -- /pal. STATUS: duration in seconds, scale, sound (a SOUND_NAME_* or STATUS_OFF), debug
+        -- on/off, the command list.
         STATUS = "Splash for %d s at scale %.2f, sound %s, debug %s. Commands: %s",
         STATUS_ON = "on",
         STATUS_OFF = "off",
+        SOUND_NAME_FAMILY = "pet family",
+        SOUND_NAME_LEVELUP = "level-up",
         NOT_HUNTER = "Only hunters learn pet abilities; nothing is watched on this character.",
         -- Used by /pal test and /pal sim when the client cannot name Claw rank 2 itself.
         TEST_SPELL = "Claw",
@@ -30,7 +33,8 @@ ns.Locales.enUS = {
         NOT_WILD = "%s is not a pet ability learned in the wild; no splash.",
         DURATION_SET = "Splash duration: %d seconds.",
         SCALE_SET = "Splash scale: %.2f.",
-        SOUND_ON = "Sound on.",
+        SOUND_FAMILY = "Sound: the call of your pet's family (the level-up sound when it has none).",
+        SOUND_LEVELUP = "Sound: the level-up sound.",
         SOUND_OFF = "Sound off.",
         POSITION_RESET = "Splash position reset.",
         DEBUG_ON = "Debug on.",

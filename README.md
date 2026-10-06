@@ -30,7 +30,10 @@ at the edges, the ability's icon in a gold ring, glowing text.
   resistances), nor anything learned while a trainer window is open, nor
   your other spells and recipes.
 - The splash stays for 6 seconds, then fades. Hover over it to keep it up,
-  right-click to close it, drag it to move it; a level-up sound plays with it.
+  right-click to close it, drag it to move it.
+- It plays the call of the teaching pet's family: a cat growls, a wolf
+  howls. Crocolisks, scorpids and bats get the level-up sound, as does a
+  learn when the pet is no longer out.
 - It only watches on hunters. On other characters the addon stays loaded but
   idle; `/pal` and the panel still work there.
 
@@ -71,7 +74,9 @@ All settings are saved for the whole account. The rest are chat commands
   so when the name is not an ability learned in the wild.
 - `/pal duration <seconds>` sets how long the splash stays (default 6).
 - `/pal scale <0.3-3>` sets its size (default 1).
-- `/pal sound on` and `/pal sound off` switch the sound.
+- `/pal sound family` plays the pet family's call (the default; `/pal sound
+  on` does the same), `/pal sound levelup` always the level-up sound, and
+  `/pal sound off` nothing.
 - `/pal reset` puts the splash back in its standard spot.
 - `/pal debug` switches the debug trace on or off.
 
@@ -119,9 +124,10 @@ In `.toc` order; all share the addon namespace `ns`.
 - `Core.lua` — the saved settings (`ns.DEFAULTS`, `ns.db`,
   `ns.LoadSettings`, `ns.StripDefaults`), `ns.Print`, `ns.Debug`, and the
   lookups that differ between clients: `ns.SpellInfo` (name, rank, icon by
-  spell ID) and `ns.PetSpells` (the active pet's spellbook).
+  spell ID), `ns.PetSpells` (the active pet's spellbook) and `ns.PetFamilyID`.
 - `Splash.lua` — the splash frame (`ns.ShowSplash`, `ns.HideSplash`): its
-  background, the glowing texts, and the animation on one `OnUpdate` clock.
+  background, the glowing texts, the pet's portrait badge, the animation on
+  one `OnUpdate` clock, and the sound (`FAMILY_SOUNDS`).
 - `Detect.lua` — the event frame (one method per event) and the detection:
   which line or event means a learn, whether it is an ability learned in the
   wild, merging, and `ns.SimulateChat` for `/pal sim`.
@@ -133,8 +139,8 @@ In `.toc` order; all share the addon namespace `ns`.
   the debug checkbox, the test and sim buttons.
 
 The settings are saved account-wide in `PetAbilityLearnedDB`: `duration`
-(whole seconds, from 1), `scale` (0.3 to 3), `sound` and `debug` (booleans),
-and `pos`, the dragged spot as `{ point, relativePoint, x, y }`. Only values
+(whole seconds, from 1), `scale` (0.3 to 3), `sound` (`"family"`,
+`"levelup"` or `"off"`), `debug` (a boolean), and `pos`, the dragged spot as `{ point, relativePoint, x, y }`. Only values
 that differ from their default are kept: `ns.db` reads the rest from the
 defaults through a metatable, a broken value is dropped on load so its
 default shows through, numbers are put back in range, and `ns.StripDefaults`
@@ -170,6 +176,14 @@ in a later version so reaches everyone who never changed it. Until
 - On any class but hunter, `ADDON_LOADED` registers only `PLAYER_LOGOUT`; the
   addon list is account-wide, so disabling the addon there would disable it
   for the hunters too.
+- When the pet out has the ability, it is the one that taught it: the splash
+  then shows its portrait (`SetPortraitTexture`), names it as it is called
+  now, and plays its family's sound. The family is the CreatureFamily ID from
+  `UnitCreatureFamily`, so it works in every language; `FAMILY_SOUNDS` maps
+  it to the FileDataID of that family's aggro sound for `PlaySoundFile`,
+  found in the wago.tools community listfile. Families without one
+  (Crocolisk, Scorpid, Bat), and a learn without its pet, get the level-up
+  sound (SoundKit 888).
 
 ### Localization
 

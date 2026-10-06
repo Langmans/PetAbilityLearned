@@ -18,6 +18,29 @@ local FALLBACK_ICON = "Interface\\Icons\\Ability_Hunter_BeastTraining"
 local CIRCLE_MASK = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
 local LEVEL_UP_SOUND = 888
 
+-- The aggro sound of each pet family, by CreatureFamily ID (the second return of
+-- UnitCreatureFamily, the same on every client language), as a FileDataID for PlaySoundFile.
+-- FileDataIDs from the wago.tools community listfile; the file names are given so they can be
+-- looked up again. No aggro sound was found for Crocolisk (6), Scorpid (20) and Bat (24): those
+-- get the level-up sound.
+---@type table<number, number>
+local FAMILY_SOUNDS = {
+    [1] = 564215, -- Wolf: sound/creature/wolf/mwolfaggro1.ogg
+    [2] = 562387, -- Cat: sound/creature/tiger/mtigeraggroa.ogg
+    [3] = 561415, -- Spider: sound/creature/tarantula/mtarantulaaggroa.ogg
+    [4] = 544959, -- Bear: sound/creature/bear/mbearaggroa.ogg
+    [5] = 545134, -- Boar: sound/creature/boar/mwildboaraggro1.ogg
+    [7] = 545937, -- Carrion Bird: sound/creature/carrion/mcarrionaggroa.ogg
+    [8] = 546423, -- Crab: sound/creature/crab/crabaggro.ogg
+    [9] = 550967, -- Gorilla: sound/creature/gorilla/gorillaaggroa.ogg
+    [11] = 558877, -- Raptor: sound/creature/raptor/mraptoraggroa.ogg
+    [12] = 561390, -- Tallstrider: sound/creature/tallstrider/tallstrideraggroa.ogg
+    [21] = 559878, -- Turtle: sound/creature/seaturtle/seaturtleaggroa.ogg
+    [25] = 552339, -- Hyena: sound/creature/hyena/hyenaaggroa.ogg
+    [26] = 557977, -- Bird of Prey: sound/creature/owl/owlaggro.ogg
+    [27] = 559967, -- Wind Serpent: sound/creature/serpent/serpentaggro.ogg
+}
+
 -- Intro timings, in seconds.
 local BG_FADE = 0.25
 local CONTENT_DELAY, CONTENT_FADE = 0.10, 0.30
@@ -258,6 +281,20 @@ end)
 ---@field icon (number|string)? texture; the Beast Training icon when nil
 ---@field source string? the line under the rank, such as where it came from
 ---@field petPortrait boolean? show the active pet's portrait as a badge on the icon
+---@field familyID number? the CreatureFamily ID of the pet that taught it, for its sound
+
+---The sound for a splash, as the sound setting asks.
+---@param familyID number?
+local function PlaySplashSound(familyID)
+    local mode = ns.db.sound
+    if mode == "off" then return end
+    local familySound = mode == "family" and familyID and FAMILY_SOUNDS[familyID]
+    if familySound then
+        PlaySoundFile(familySound, "Master")
+    else
+        PlaySound(LEVEL_UP_SOUND, "Master")
+    end
+end
 
 ---@param info SplashInfo
 function ns.ShowSplash(info)
@@ -283,5 +320,5 @@ function ns.ShowSplash(info)
     frame:SetScript("OnUpdate", Animate)
     frame:Show()
 
-    if db.sound then PlaySound(LEVEL_UP_SOUND, "Master") end
+    PlaySplashSound(info.familyID)
 end

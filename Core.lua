@@ -14,9 +14,16 @@ local _, ns = ...
 ---@class Settings
 ---@field duration number whole seconds the splash stays before it fades, from 1
 ---@field scale number from 0.3 to 3
----@field sound boolean
+---@field sound SoundMode
 ---@field debug boolean
 ---@field pos [string, string, number, number]? point, relativePoint, x, y of a dragged splash
+
+---What plays with the splash: the pet family's own sound (the level-up sound for a family
+---without one), always the level-up sound, or nothing.
+---@alias SoundMode "family"|"levelup"|"off"
+
+---@type table<string, true>
+ns.SOUND_MODES = { family = true, levelup = true, off = true }
 
 ---A value the game hands over without a known type: from a SavedVariables file, an event
 ---argument or an API return.
@@ -32,7 +39,7 @@ local _, ns = ...
 ns.DEFAULTS = {
     duration = 6, -- /pal duration <seconds>
     scale = 1, -- /pal scale <0.3-3>
-    sound = true, -- /pal sound on|off
+    sound = "family", -- /pal sound family|levelup|off
     debug = false, -- /pal debug
 }
 
@@ -77,6 +84,15 @@ function ns.SpellInfo(id)
         rank = GetSpellSubtext(id) --[[@as string?]]
     end
     return name, rank ~= "" and rank or nil, icon
+end
+
+---The active pet's CreatureFamily ID (1 wolf, 2 cat, ...), the same on every client language;
+---nil without a pet.
+---@return number?
+function ns.PetFamilyID()
+    if not UnitExists("pet") then return nil end
+    local _, familyID = UnitCreatureFamily("pet")
+    return tonumber(familyID)
 end
 
 ---The spells in the active pet's spellbook, keyed by name, to fill in the rank and icon of an
@@ -138,6 +154,9 @@ function ns.LoadSettings()
     for key, default in pairs(ns.DEFAULTS) do
         if db[key] ~= nil and type(db[key]) ~= type(default) then db[key] = nil end
     end
+    -- A string that is no sound mode is dropped as well; rawset, since the field may hold only a
+    -- mode once loaded, and nil here just lets the default show through.
+    if db.sound ~= nil and not ns.SOUND_MODES[db.sound] then rawset(db, "sound", nil) end
     setmetatable(db, { __index = ns.DEFAULTS })
     -- Numbers are put back in range: whole seconds from 1, a scale from 0.3 to 3.
     db.duration = math.max(1, math.floor(db.duration))

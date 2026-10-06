@@ -26,7 +26,7 @@ end)
 test("esMX uses the Spanish strings", function()
     local ns = NewClient({ locale = "esMX" }).ns
     eq(ns.LocaleCode, "esMX")
-    eq(ns.L.SOUND_ON, "Sonido activado.")
+    eq(ns.L.SOUND_OFF, "Sonido desactivado.")
 end)
 
 test("an untranslated string falls back to enUS", function()

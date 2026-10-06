@@ -14,7 +14,7 @@ local COMMAND_LIST = table.concat({
     "/pal sim [name]",
     "/pal duration <seconds>",
     "/pal scale <0.3-3>",
-    "/pal sound on|off",
+    "/pal sound family|levelup|off",
     "/pal reset",
     "/pal config",
     "/pal debug",
@@ -28,15 +28,17 @@ local function firstWord(rest)
     return lowered:match("^%S*") or ""
 end
 
----"on" -> true, "off" -> false, anything else nil.
----@param rest string
----@return boolean?
-local function onOff(rest)
-    local word = firstWord(rest)
-    if word == "on" then return true end
-    if word == "off" then return false end
-    return nil
-end
+-- How each sound mode is named in the status line.
+---@type table<SoundMode, string>
+local SOUND_NAMES = { family = L.SOUND_NAME_FAMILY, levelup = L.SOUND_NAME_LEVELUP, off = L.STATUS_OFF }
+
+-- What /pal sound takes: the mode names, and "on" for the default.
+---@type table<string, SoundMode>
+local SOUND_WORDS = { family = "family", on = "family", levelup = "levelup", ["level-up"] = "levelup", off = "off" }
+
+-- What /pal sound answers for each mode.
+---@type table<SoundMode, string>
+local SOUND_SET = { family = L.SOUND_FAMILY, levelup = L.SOUND_LEVELUP, off = L.SOUND_OFF }
 
 ---The current settings and the list of commands.
 local function status()
@@ -48,7 +50,7 @@ local function status()
             "STATUS",
             db.duration,
             db.scale,
-            db.sound and L.STATUS_ON or L.STATUS_OFF,
+            SOUND_NAMES[db.sound],
             db.debug and L.STATUS_ON or L.STATUS_OFF,
             COMMAND_LIST
         )
@@ -74,7 +76,7 @@ local Commands = {}
 ---/pal test [name]: the splash only, no detection. rest keeps the case it was typed in.
 function Commands.test(rest)
     local spell, rank, icon = testSpell(rest)
-    ns.ShowSplash({ name = spell, rank = rank, icon = icon, petPortrait = true })
+    ns.ShowSplash({ name = spell, rank = rank, icon = icon, petPortrait = true, familyID = ns.PetFamilyID() })
 end
 
 ---/pal sim [name]: a learn line as the game would print it, through the real detection.
@@ -105,13 +107,13 @@ function Commands.scale(rest)
     Print(ns.Format("SCALE_SET", db.scale))
 end
 
----/pal sound on|off
+---/pal sound family|levelup|off
 function Commands.sound(rest)
-    local on = onOff(rest)
-    if on == nil then return status() end
+    local mode = SOUND_WORDS[firstWord(rest)]
+    if not mode then return status() end
     local db = ns.db
-    db.sound = on
-    Print(on and L.SOUND_ON or L.SOUND_OFF)
+    db.sound = mode
+    Print(SOUND_SET[mode])
 end
 
 function Commands.reset()

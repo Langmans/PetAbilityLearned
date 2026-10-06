@@ -52,9 +52,10 @@ function NewClient(opts)
         printed = {},
         sounds = {},
         events = {},
-        -- The active pet: its name and spellbook. nil means no pet out.
+        -- The active pet: its name, family and spellbook. nil means no pet out.
         pet = {
             name = "Nightstalker",
+            familyID = 2,
             spells = {
                 { id = 16828, name = spells[16828][1], rank = spells[16828][2] },
                 { id = 2649, name = spells[2649][1], rank = spells[2649][2] },
@@ -96,6 +97,15 @@ function NewClient(opts)
         function SetPortraitTexture(texture, unit)
             texture.texture = ("portrait:%s:%s"):format(unit, UnitName(unit))
         end
+    end
+    -- client.pet.familyID: the CreatureFamily ID (2 = cat by default).
+    function UnitCreatureFamily(unit)
+        if unit ~= "pet" or not client.pet then return nil end
+        return "Cat", client.pet.familyID
+    end
+    -- client.sounds: { file = FileDataID } for a sound file, { id = SoundKit ID } for a kit.
+    function PlaySoundFile(file, channel)
+        client.sounds[#client.sounds + 1] = { file = file, channel = channel }
     end
     function PlaySound(id, channel)
         client.sounds[#client.sounds + 1] = { id = id, channel = channel }
