@@ -28,7 +28,9 @@ test("the about line comes from the .toc, through either metadata API", function
 end)
 
 test("missing metadata shows question marks and no website box", function()
-    local client = NewClient({ metadata = { Version = false, Author = false, ["X-License"] = false } })
+    local client = NewClient({
+        metadata = { Version = false, Author = false, ["X-License"] = false, ["X-Website"] = false },
+    })
     eq(textStarting(client, "Version "), "Version ? by ?, ? license.")
     eq(client.ns.WebsiteBox, nil)
     eq(textStarting(client, "Website"), nil)

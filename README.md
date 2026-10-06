@@ -55,7 +55,7 @@ from the defaults in `Core.lua`; a missing value reads the default, a broken
 one is dropped on load, and numbers are put back in range.
 
 The about panel shows version, author and license from the `.toc`, a copy box
-for `X-Website` once the `.toc` has one, what the addon does, the Debug trace
+for `X-Website` (the GitHub repo), what the addon does, the Debug trace
 checkbox, and buttons for `/pal test` and `/pal sim`.
 
 ## Development

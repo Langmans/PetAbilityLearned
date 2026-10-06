@@ -6,6 +6,7 @@
 ## SavedVariables: PetAbilityLearnedDB
 ## IconTexture: Interface\Icons\Ability_Hunter_BeastTraining
 ## X-License: MIT
+## X-Website: https://github.com/Langmans/PetAbilityLearned
 
 Core.lua
 Splash.lua
