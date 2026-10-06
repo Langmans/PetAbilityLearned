@@ -3,7 +3,7 @@ local _, ns = ...
 ns.Locales.deDE = {
     strings = {
         SPLASH_TITLE = "Neue Begleiterfähigkeit erlernt!",
-        SPLASH_FROM_PET = "Von %s gelernt. Bring sie anderen Begleitern über die Wildtierausbildung bei.",
+        SPLASH_FROM_PET = "%s hat dir %s beigebracht.",
         SPLASH_TEACH = "Bring sie deinem Begleiter im Fenster der Wildtierausbildung bei.",
 
         STATUS = "Anzeige für %d s mit Größe %.2f, Ton %s, Debug %s. Befehle: %s",

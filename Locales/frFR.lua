@@ -3,7 +3,7 @@ local _, ns = ...
 ns.Locales.frFR = {
     strings = {
         SPLASH_TITLE = "Nouvelle technique de familier apprise !",
-        SPLASH_FROM_PET = "Apprise de %s. Enseignez-la à d'autres familiers via le Dressage des bêtes.",
+        SPLASH_FROM_PET = "%s vous a appris %s.",
         SPLASH_TEACH = "Enseignez-la à votre familier depuis la fenêtre Dressage des bêtes.",
 
         STATUS = "Annonce pendant %d s à l'échelle %.2f, son %s, débogage %s. Commandes : %s",

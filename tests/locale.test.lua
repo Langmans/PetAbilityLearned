@@ -20,10 +20,7 @@ end)
 test("a translated string comes from the client's locale", function()
     local ns = NewClient({ locale = "deDE" }).ns
     eq(ns.LocaleCode, "deDE")
-    eq(
-        ns.Format("SPLASH_FROM_PET", "Nachtpirscher"),
-        "Von Nachtpirscher gelernt. " .. "Bring sie anderen Begleitern über die Wildtierausbildung bei."
-    )
+    eq(ns.Format("SPLASH_FROM_PET", "Nachtpirscher", "Klaue"), "Nachtpirscher hat dir Klaue beigebracht.")
 end)
 
 test("esMX uses the Spanish strings", function()

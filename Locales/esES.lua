@@ -4,7 +4,7 @@ local _, ns = ...
 ns.Locales.esES = {
     strings = {
         SPLASH_TITLE = "¡Nueva habilidad de mascota aprendida!",
-        SPLASH_FROM_PET = "Aprendida de %s. Enséñala a otras mascotas con Adiestramiento de bestias.",
+        SPLASH_FROM_PET = "%s te ha enseñado %s.",
         SPLASH_TEACH = "Enséñala a tu mascota desde la ventana de Adiestramiento de bestias.",
 
         STATUS = "Aviso durante %d s a escala %.2f, sonido %s, depuración %s. Comandos: %s",

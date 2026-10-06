@@ -8,8 +8,17 @@ test("a learn line for a wild ability shows the splash with name, rank, icon and
     eq(client:splashName(), "Claw")
     eq(client.splash.Rank.text, "Rank 2")
     eq(client.splash.Icon.texture, 132140)
-    eq(client.splash.Source.text, "Learned from Nightstalker. Teach it to other pets via Beast Training.")
+    eq(client.splash.Source.text, "Nightstalker has taught you Claw.")
     eq(#client.sounds, 1)
+end)
+
+test("a renamed pet is named as it is called now", function()
+    local client = NewClient():login()
+    client.pet.name = "Fluffy"
+    client:chat(client:learnLine("Claw (Rank 2)"))
+    client:advance(0.3)
+    eq(client.splash.Source.text, "Fluffy has taught you Claw.")
+    eq(client.splash.Portrait.texture, "portrait:pet:Fluffy")
 end)
 
 test("the 'new spell' line counts too", function()

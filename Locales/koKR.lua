@@ -3,7 +3,7 @@ local _, ns = ...
 ns.Locales.koKR = {
     strings = {
         SPLASH_TITLE = "새 소환수 기술을 배웠습니다!",
-        SPLASH_FROM_PET = "%s에게서 배웠습니다. 야수 조련으로 다른 소환수에게 가르치세요.",
+        SPLASH_FROM_PET = "%s에게서 %s|1을;를; 배웠습니다.",
         SPLASH_TEACH = "야수 조련 창에서 소환수에게 가르치세요.",
 
         STATUS = "알림 %d초, 크기 %.2f, 소리 %s, 디버그 %s. 명령어: %s",

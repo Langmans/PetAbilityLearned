@@ -11,8 +11,8 @@ ns.Locales.enUS = {
 
         -- The splash.
         SPLASH_TITLE = "New Pet Ability Learned!",
-        -- %s is the pet's name.
-        SPLASH_FROM_PET = "Learned from %s. Teach it to other pets via Beast Training.",
+        -- The pet's name, then the ability's name.
+        SPLASH_FROM_PET = "%s has taught you %s.",
         SPLASH_TEACH = "Teach it to your pet from the Beast Training window.",
 
         -- /pal. STATUS: duration in seconds, scale, sound on/off, debug on/off, the command list.

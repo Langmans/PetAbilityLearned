@@ -5,7 +5,7 @@ a pet ability from a tamed beast:
 
 > **New Pet Ability Learned!**
 > Claw — Rank 2
-> Learned from Nightstalker. Teach it to other pets via Beast Training.
+> Fluffy has taught you Claw.
 
 Tame a beast that knows a higher rank than you do (a Nightstalker with Claw
 rank 2 while you only have rank 1, say), fight with it, and you learn that
@@ -18,7 +18,9 @@ at the edges, the ability's icon in a gold ring, glowing text.
 
 ## What it shows
 
-- The ability's icon, name and rank, and which pet you learned it from.
+- The ability's icon, name and rank, and which pet taught it to you: its
+  portrait as a badge on the icon, and "Fluffy has taught you Claw." under
+  it, with the name your pet has now.
 - Only abilities you learn from beasts in the wild: Bite, Charge, Claw, Cower,
   Dash, Demoralizing Screech, Dive, Furious Howl, Lightning Breath, Prowl,
   Scorpid Poison, Shell Shield, Thunderstomp, and the family abilities new in
