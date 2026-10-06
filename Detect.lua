@@ -110,8 +110,9 @@ local lastShown = {} -- name -> GetTime() of the last splash, against late dupli
 ---@param name string
 ---@return (number|string)?
 local function SpellTextureByName(name)
-    if C_Spell and C_Spell.GetSpellTexture then return C_Spell.GetSpellTexture(name) end
-    return GetSpellTexture and GetSpellTexture(name)
+    -- Both return the icon and the original icon; only the first is wanted.
+    if C_Spell and C_Spell.GetSpellTexture then return (C_Spell.GetSpellTexture(name)) end
+    return GetSpellTexture and (GetSpellTexture(name))
 end
 
 ---Shows the pending learn, if any.
