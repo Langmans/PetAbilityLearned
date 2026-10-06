@@ -3,8 +3,8 @@ local _, ns = ...
 -- Shared helpers and the saved settings. Loaded after Locale.lua (ns.Print needs ns.L) and before
 -- every module that uses them.
 --
--- Globals this file writes: PetAbilityLearnedDB, the SavedVariables from the .toc. The language
--- server only knows it when it reads the .toc, so each write carries a create-global exception.
+-- Globals this file writes: PetAbilityLearnedDB, the SavedVariables from the .toc. WoW Lua LS
+-- reads that from the .toc, so writing it needs no diagnostic exception.
 
 -- Saved account-wide. The saved file keeps only what the player changed: ns.db reads a missing
 -- value from here through a metatable, and StripDefaults removes values equal to their default
@@ -146,7 +146,6 @@ end
 ---Creates or repairs the saved settings and makes them ns.db. Called on ADDON_LOADED, when the
 ---client has filled in the saved table.
 function ns.LoadSettings()
-    ---@diagnostic disable-next-line: create-global
     if type(PetAbilityLearnedDB) ~= "table" then PetAbilityLearnedDB = {} end
     ---@type Settings
     local db = PetAbilityLearnedDB
