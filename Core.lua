@@ -1,6 +1,7 @@
 local ADDON_NAME, ns = ...
 
--- Shared helpers and the saved settings. Loaded first; every other file uses them.
+-- Shared helpers and the saved settings. Loaded after Locale.lua (ns.Print needs ns.L) and before
+-- every module that uses them.
 --
 -- Globals this file writes: PetAbilityLearnedDB, the SavedVariables from the .toc. The language
 -- server only knows it when it reads the .toc, so each write carries a create-global exception.
@@ -17,8 +18,9 @@ ns.DEFAULTS = {
     debug = false, -- /pal debug
 }
 
-function ns.Print(msg)
-    print("|cffabd473PetAbilityLearned|r: " .. tostring(msg))
+---@param message string
+function ns.Print(message)
+    print("|cffabd473" .. ns.L.CHAT_PREFIX .. "|r " .. message)
 end
 
 ---/pal debug traces the detection in chat: every learn it sees and what it decided.

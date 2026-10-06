@@ -98,9 +98,7 @@ local function Flush()
 
     local petSpell = info.petSpell
     local source
-    if petSpell and UnitExists("pet") then
-        source = ("Learned from %s. Teach it to other pets via Beast Training."):format(UnitName("pet"))
-    end
+    if petSpell and UnitExists("pet") then source = ns.Format("SPLASH_FROM_PET", UnitName("pet")) end
     ns.ShowSplash({
         name = info.name,
         rank = info.rank or (petSpell and petSpell.rank),

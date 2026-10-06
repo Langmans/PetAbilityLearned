@@ -38,8 +38,13 @@ end
 ---@param opts {locale: string?, class: string?, savedDB: table?, oldSpellAPI: boolean?, oldSpellBookAPI: boolean?, noPetSpellAPI: boolean?, noLearnStrings: boolean?, noMasks: boolean?, noTextureAPI: boolean?}?
 function NewClient(opts)
     opts = opts or {}
+    -- opts.locale: the client's language. Spell names and the learn line exist here for enUS and
+    -- deDE; any other locale reads the English ones.
     local locale = opts.locale or "enUS"
-    local spells = SPELLS[locale]
+    local spells = SPELLS[locale] or SPELLS.enUS
+    function GetLocale()
+        return locale
+    end
     local client = {
         time = 100,
         timers = {},
@@ -93,7 +98,7 @@ function NewClient(opts)
         return value == client.secret
     end
 
-    local strings = LEARN_STRINGS[locale]
+    local strings = LEARN_STRINGS[locale] or LEARN_STRINGS.enUS
     if opts.noLearnStrings then
         ERR_LEARN_ABILITY_S, ERR_LEARN_SPELL_S = nil, nil
     else

@@ -8,6 +8,13 @@
 ## X-License: MIT
 ## X-Website: https://github.com/Langmans/PetAbilityLearned
 
+Locales\enUS.lua
+Locales\deDE.lua
+Locales\esES.lua
+Locales\frFR.lua
+Locales\koKR.lua
+Locales\ruRU.lua
+Locale.lua
 Core.lua
 Splash.lua
 Detect.lua

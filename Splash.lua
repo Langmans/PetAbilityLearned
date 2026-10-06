@@ -130,7 +130,7 @@ end
 local title = GlowText("GameFontNormalLarge", 2)
 title.main:SetPoint("TOP", ring, "BOTTOM", 0, -10)
 title:Set("SetTextColor", HUNTER_GREEN[1], HUNTER_GREEN[2], HUNTER_GREEN[3])
-title:Set("SetText", "New Pet Ability Learned!")
+title:Set("SetText", ns.L.SPLASH_TITLE)
 
 local spellName = GlowText("GameFontNormalHuge", 3, 30)
 spellName.main:SetPoint("TOP", title.main, "BOTTOM", 0, -8)
@@ -200,7 +200,7 @@ function ns.ShowSplash(info)
     icon:SetTexture(info.icon or FALLBACK_ICON)
     spellName:Set("SetText", info.name or "?")
     rankText:Set("SetText", info.rank or "")
-    subText:Set("SetText", info.source or "Teach it to your pet from the Beast Training window.")
+    subText:Set("SetText", info.source or ns.L.SPLASH_TEACH)
 
     frame:SetScale(db.scale --[[@as number]])
     PositionFrame()

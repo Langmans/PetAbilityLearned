@@ -75,6 +75,16 @@ npm run check
 - `npm run lint` runs StyLua and WoW Lua LS (from its VS Code extension).
 - `npm run format` formats with StyLua.
 
+## Localization
+
+Texts are in `Locales\*.lua`: enUS, deDE, esES (also used for esMX), frFR,
+koKR and ruRU, the same set as FeedPetEmotes. `Locale.lua` picks the client's
+language; a locale lists only what it translates and falls back to enUS per
+key, and a key missing from enUS shows as the key itself. Slash commands and
+the debug trace stay English. Spell names, the learn chat line and the rank
+word come from the client and need no translation. A test checks that every
+locale only uses enUS keys with the same format directives.
+
 ## Install
 
 Developed here and linked into the client with a directory junction:
@@ -87,6 +97,7 @@ New-Item -ItemType Junction `
 
 ## Files
 
+- `Locales\*.lua`, `Locale.lua`: texts per language and picking one (`ns.L`, `ns.Format`).
 - `Core.lua`: settings, spell info and the pet spellbook across client APIs.
 - `Splash.lua`: the splash frame and its animation.
 - `Detect.lua`: event handling and deciding what is a pet ability.
