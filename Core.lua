@@ -10,7 +10,21 @@ local _, ns = ...
 -- value from here through a metatable, and StripDefaults removes values equal to their default
 -- at logout. A default changed in a later version so reaches everyone who never changed it.
 -- pos has no default: without it the splash sits in its standard spot.
----@type {duration: number, scale: number, sound: boolean, debug: boolean}
+
+---@class Settings
+---@field duration number whole seconds the splash stays before it fades, from 1
+---@field scale number from 0.3 to 3
+---@field sound boolean
+---@field debug boolean
+---@field pos [string, string, number, number]? point, relativePoint, x, y of a dragged splash
+
+---A spell in the active pet's spellbook.
+---@class PetSpell
+---@field id number?
+---@field rank string?
+---@field icon (number|string)?
+
+---@type Settings
 ns.DEFAULTS = {
     duration = 6, -- /pal duration <seconds>
     scale = 1, -- /pal scale <0.3-3>
@@ -24,13 +38,19 @@ function ns.Print(message)
 end
 
 ---/pal debug traces the detection in chat: every learn it sees and what it decided.
+---@param message string
 function ns.Debug(message)
     if ns.db and ns.db.debug then ns.Print("|cff88ccff[debug]|r " .. message) end
 end
 
--- Spell info across client generations: C_Spell on newer clients, GetSpellInfo on older ones.
+---Spell info across client generations: C_Spell on newer clients, GetSpellInfo on older ones.
+---@param id number?
+---@return string? name
+---@return string? rank the rank text ("Rank 2"), nil when the spell has none
+---@return (number|string)? icon
 function ns.SpellInfo(id)
     if not id then return nil end
+    ---@type string?, (number|string)?, string?
     local name, icon, rank
     if C_Spell and C_Spell.GetSpellName then
         name = C_Spell.GetSpellName(id)
@@ -48,16 +68,19 @@ function ns.SpellInfo(id)
     return name, rank, icon
 end
 
--- The spells in the active pet's spellbook, keyed by name, to fill in the rank and icon of an
--- ability learned from it. C_SpellBook names the pet's book with an Enum number, the old
--- globals with the string BOOKTYPE_PET.
+---The spells in the active pet's spellbook, keyed by name, to fill in the rank and icon of an
+---ability learned from it. C_SpellBook names the pet's book with an Enum number, the old
+---globals with the string BOOKTYPE_PET.
+---@return table<string, PetSpell>
 function ns.PetSpells()
+    ---@type table<string, PetSpell>
     local spells = {}
     local hasPetSpells = (C_SpellBook and C_SpellBook.HasPetSpells) or HasPetSpells
     if not hasPetSpells then return spells end
     local ok, num = pcall(hasPetSpells)
     num = ok and tonumber(num) or 0
     for i = 1, num do
+        ---@type string?, string?, number?
         local name, rank, id
         if C_SpellBook and C_SpellBook.GetSpellBookItemInfo then
             local okInfo, info = pcall(C_SpellBook.GetSpellBookItemInfo, i, Enum.SpellBookSpellBank.Pet)
@@ -80,7 +103,7 @@ end
 
 ---A dragged position as saved: { point, relativePoint, x, y }, or nil when anything is off.
 ---@param saved any
----@return table?
+---@return [string, string, number, number]?
 local function cleanPos(saved)
     if type(saved) ~= "table" then return nil end
     local point, relativePoint, x, y = saved[1], saved[2], saved[3], saved[4]
@@ -94,6 +117,7 @@ end
 function ns.LoadSettings()
     ---@diagnostic disable-next-line: create-global
     if type(PetAbilityLearnedDB) ~= "table" then PetAbilityLearnedDB = {} end
+    ---@type Settings
     local db = PetAbilityLearnedDB
     -- A broken value is dropped, so the default shows through.
     for key, default in pairs(ns.DEFAULTS) do

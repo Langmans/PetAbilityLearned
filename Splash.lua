@@ -32,6 +32,7 @@ frame:RegisterForDrag("LeftButton")
 frame:Hide()
 ns.splash = frame
 
+---Puts the splash where it was dragged to, or in its standard spot above the centre.
 local function PositionFrame()
     frame:ClearAllPoints()
     local pos = ns.db and ns.db.pos
@@ -42,10 +43,14 @@ local function PositionFrame()
     end
 end
 
-frame:SetScript("OnDragStart", function(self)
+frame:SetScript("OnDragStart", function(
+    self --[[@as Frame]]
+)
     self:StartMoving()
 end)
-frame:SetScript("OnDragStop", function(self)
+frame:SetScript("OnDragStop", function(
+    self --[[@as Frame]]
+)
     self:StopMovingOrSizing()
     local point, _, relativePoint, x, y = self:GetPoint(1)
     if ns.db and point then ns.db.pos = { point, relativePoint, x, y } end
@@ -57,10 +62,13 @@ end)
 local bg = CreateFrame("Frame", nil, frame)
 bg:SetAllPoints(frame)
 
+---@param t number from 0 to 1
+---@return number
 local function SmoothStep(t)
     return t * t * (3 - 2 * t)
 end
 
+---Creates the background layers once.
 local function BuildBackground()
     local fadeX, fadeY = FRAME_WIDTH * BG_FADE_FRACTION, FRAME_HEIGHT * BG_FADE_FRACTION
     local previous = 0
@@ -82,9 +90,27 @@ content:SetAllPoints(frame)
 
 local GLOW_DIRS = { { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 }, { -1, -1 }, { 1, 1 }, { -1, 1 }, { 1, -1 } }
 
--- A font string with eight faint copies around it; every setter goes to all nine.
+---A font string with eight faint copies around it; every setter goes to all nine.
+---@class GlowText
+---@field main FontString the readable text; the copies are anchored to it
+---@field layers FontString[] the text and its copies
+local GlowTextMethods = {}
+
+---Calls a FontString method with the same arguments on the text and all its copies.
+---@param method string
+function GlowTextMethods:Set(method, ...)
+    for _, fs in ipairs(self.layers) do
+        fs[method](fs, ...)
+    end
+end
+
+---@param template string font object for the text
+---@param radius number how far the copies sit from the text, in pixels
+---@param size number? font size, when the template's is not the one wanted
+---@return GlowText
 local function GlowText(template, radius, size)
     local main = content:CreateFontString(nil, "OVERLAY", template)
+    ---@type FontString[]
     local layers = { main }
     for _, dir in ipairs(GLOW_DIRS) do
         local glow = content:CreateFontString(nil, "ARTWORK", template)
@@ -93,12 +119,8 @@ local function GlowText(template, radius, size)
         glow:SetAlpha(GLOW_ALPHA)
         layers[#layers + 1] = glow
     end
-    local text = { main = main }
-    function text:Set(method, ...)
-        for _, fs in ipairs(layers) do
-            fs[method](fs, ...)
-        end
-    end
+    ---@type GlowText
+    local text = setmetatable({ main = main, layers = layers }, { __index = GlowTextMethods })
     if size then
         local path, _, flags = main:GetFont()
         text:Set("SetFont", path, size, flags or "")
@@ -147,19 +169,35 @@ subText:Set("SetTextColor", 0.8, 0.8, 0.8)
 frame.Icon, frame.Name, frame.Rank, frame.Source = icon, spellName.main, rankText.main, subText.main
 
 -- Intro and outro run on one OnUpdate clock so a new splash can restart them cleanly.
+
+---@param p number from 0 to 1
+---@return number
 local function EaseOut(p)
     return 1 - (1 - p) * (1 - p)
 end
+
+---Overshoots a little before settling at 1: the icon's pop.
+---@param p number from 0 to 1
+---@return number
 local function EaseOutBack(p)
     local c = 1.70158
     return 1 + (c + 1) * (p - 1) ^ 3 + c * (p - 1) ^ 2
 end
+
+---How far an animation that starts at `delay` and lasts `duration` is at time `t`, from 0 to 1.
+---@param t number
+---@param delay number
+---@param duration number
+---@return number
 local function Progress(t, delay, duration)
     return math.max(0, math.min(1, (t - delay) / duration))
 end
 
-local clock, fadeAt, fadeStart
+---Seconds since the splash was shown, when it starts to fade, and when the fade began.
+---@type number, number, number?
+local clock, fadeAt, fadeStart = 0, 0, nil
 
+---@param elapsed number seconds since the previous frame
 local function Animate(_, elapsed)
     clock = clock + elapsed
     bg:SetAlpha(EaseOut(Progress(clock, 0, BG_FADE)))
@@ -184,25 +222,37 @@ local function Animate(_, elapsed)
     end
 end
 
+---Closes the splash at once, without the fade.
 function ns.HideSplash()
     frame:SetScript("OnUpdate", nil)
     frame:Hide()
 end
 
-frame:SetScript("OnMouseUp", function(_, button)
+frame:SetScript("OnMouseUp", function(
+    _,
+    button --[[@as string]]
+)
     if button == "RightButton" then ns.HideSplash() end
 end)
 
--- info: { name, rank, icon, source }. source is a line under the rank, such as where it came from.
+---What the splash shows.
+---@class SplashInfo
+---@field name string?
+---@field rank string?
+---@field icon (number|string)? texture; the Beast Training icon when nil
+---@field source string? the line under the rank, such as where it came from
+
+---@param info SplashInfo
 function ns.ShowSplash(info)
     -- Before the settings have loaded (nobody can trigger that in game) the defaults apply.
+    ---@type Settings
     local db = ns.db or ns.DEFAULTS
     icon:SetTexture(info.icon or FALLBACK_ICON)
     spellName:Set("SetText", info.name or "?")
     rankText:Set("SetText", info.rank or "")
     subText:Set("SetText", info.source or ns.L.SPLASH_TEACH)
 
-    frame:SetScale(db.scale --[[@as number]])
+    frame:SetScale(db.scale)
     PositionFrame()
     frame:SetAlpha(1)
     bg:SetAlpha(0)

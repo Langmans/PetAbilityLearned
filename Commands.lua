@@ -37,8 +37,10 @@ local function onOff(rest)
     return nil
 end
 
+---The current settings and the list of commands.
 local function status()
     if not ns.isHunter then Print(L.NOT_HUNTER) end
+    ---@type Settings
     local db = ns.db
     Print(
         ns.Format(
@@ -52,8 +54,12 @@ local function status()
     )
 end
 
--- The ability a test uses, with the rank and icon the active pet has for it. Without a pet the
--- rank is the client's own text for Claw rank 2, so the line reads right in any language.
+---The ability a test uses, with the rank and icon the active pet has for it. Without a pet the
+---rank is the client's own text for Claw rank 2, so the line reads right in any language.
+---@param name string what was typed; empty for Claw
+---@return string name
+---@return string rank
+---@return (number|string)? icon
 local function testSpell(name)
     if name == "" then name = ns.SpellInfo(CLAW) or L.TEST_SPELL end
     local petSpell = ns.PetSpells()[name]

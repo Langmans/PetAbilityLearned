@@ -17,6 +17,9 @@ title:SetText(L.OPTIONS_TITLE)
 
 -- C_AddOns has GetAddOnMetadata on newer clients, the global on older ones.
 local GetMetadata = C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata
+---A "## Key: value" line of this addon's .toc.
+---@param key string
+---@return string?
 local function Metadata(key)
     return GetMetadata(ADDON_NAME, key)
 end
@@ -89,6 +92,12 @@ panel:SetScript("OnShow", function()
 end)
 ns.DebugBox = debugBox
 
+---A button under `anchor`, `x` pixels to the right of its left edge.
+---@param label string
+---@param anchor Region
+---@param x number
+---@param onClick fun()
+---@return Button
 local function AddButton(label, anchor, x, onClick)
     local button = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
     button:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", x, -16)
@@ -111,11 +120,14 @@ Settings.RegisterAddOnCategory(category)
 -- In combat the settings window is not opened from an addon: the call can be blocked or taint
 -- the window. /pal config then waits for the end of combat and opens it once.
 local afterCombat = CreateFrame("Frame")
-afterCombat:SetScript("OnEvent", function(self)
+afterCombat:SetScript("OnEvent", function(
+    self --[[@as Frame]]
+)
     self:UnregisterEvent("PLAYER_REGEN_ENABLED")
     Settings.OpenToCategory(category:GetID())
 end)
 
+---Opens the panel in the game's settings, or once combat ends.
 function ns.OpenOptions()
     if InCombatLockdown() then
         afterCombat:RegisterEvent("PLAYER_REGEN_ENABLED")

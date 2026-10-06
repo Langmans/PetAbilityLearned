@@ -40,7 +40,10 @@ local PET_ABILITY_IDS = {
 
 -- Built on first use, and rebuilt until every name resolved: spell names are not guaranteed to be
 -- readable while the addon loads.
+---@type table<string, true>, boolean?
 local petAbilityNames, complete
+---@param name string
+---@return boolean
 local function IsPetAbilityName(name)
     if not complete then
         petAbilityNames, complete = {}, true
@@ -56,7 +59,9 @@ local function IsPetAbilityName(name)
     return petAbilityNames[name] == true
 end
 
--- A game format string such as "You have learned a new ability: %s." as a Lua pattern capturing %s.
+---A game format string such as "You have learned a new ability: %s." as a Lua pattern capturing %s.
+---@param fmt string?
+---@return string?
 local function Pattern(fmt)
     if type(fmt) ~= "string" then return nil end
     fmt = fmt:gsub("%%%d%$", "%%"):gsub("%%s", "\1")
@@ -64,12 +69,16 @@ local function Pattern(fmt)
     return "^" .. fmt .. "$"
 end
 
+---@type string[]
 local LEARN_PATTERNS = {}
 for _, fmt in ipairs({ ERR_LEARN_ABILITY_S, ERR_LEARN_SPELL_S }) do
     local pattern = Pattern(fmt)
     if pattern then LEARN_PATTERNS[#LEARN_PATTERNS + 1] = pattern end
 end
 
+---A string the addon may read: not secret (Forever hides some values in combat) and not empty.
+---@param v any
+---@return string?
 local function Plain(v)
     return type(v) == "string" and not (issecretvalue and issecretvalue(v)) and v ~= "" and v or nil
 end
@@ -81,14 +90,27 @@ local atTrainer = false
 -- The chat line and the spellbook event usually both fire for one learn. They are merged for a
 -- moment so the splash shows once, with whatever rank and icon either of them supplied.
 local MERGE_WINDOW = 0.3
+
+---A learn waiting out the merge window.
+---@class PendingLearn
+---@field name string
+---@field rank string?
+---@field icon (number|string)?
+---@field petSpell PetSpell? the active pet's spell of that name
+
+---@type PendingLearn?
 local pending
+---@type table<string, number>
 local lastShown = {} -- name -> GetTime() of the last splash, against late duplicates
 
+---@param name string
+---@return (number|string)?
 local function SpellTextureByName(name)
     if C_Spell and C_Spell.GetSpellTexture then return C_Spell.GetSpellTexture(name) end
     return GetSpellTexture and GetSpellTexture(name)
 end
 
+---Shows the pending learn, if any.
 local function Flush()
     local info = pending
     pending = nil
@@ -97,6 +119,7 @@ local function Flush()
     ns.Debug(("splash: %s, rank %s"):format(info.name, tostring(info.rank)))
 
     local petSpell = info.petSpell
+    ---@type string?
     local source
     if petSpell and UnitExists("pet") then source = ns.Format("SPLASH_FROM_PET", UnitName("pet")) end
     ns.ShowSplash({
@@ -155,10 +178,14 @@ local function Learned(name, rank, spellID)
     return true
 end
 
-local function OnChat(msg)
-    msg = Plain(msg)
+---A system chat line; returns whether it reported learning a pet ability.
+---@param line any
+---@return boolean
+local function OnChat(line)
+    local msg = Plain(line)
     if not msg then return false end
     for _, pattern in ipairs(LEARN_PATTERNS) do
+        ---@type string?
         local learned = msg:match(pattern)
         if learned then
             ns.Debug("chat: " .. msg:gsub("|", "||"))
@@ -171,6 +198,8 @@ local function OnChat(msg)
     return false
 end
 
+---@param event string
+---@param spellID number
 local function SpellbookLearned(event, spellID)
     ns.Debug(("%s: spell %s"):format(event, tostring(spellID)))
     local name, rank = ns.SpellInfo(spellID)
@@ -187,6 +216,7 @@ end
 -- past PLAYER_LOGOUT, while /pal and the options panel keep working.
 local frame = CreateFrame("Frame")
 
+---@param name string the addon that finished loading
 function frame:ADDON_LOADED(name)
     if name ~= ADDON_NAME then return end
     self:UnregisterEvent("ADDON_LOADED")
@@ -217,14 +247,17 @@ function frame:PLAYER_LOGIN()
     end)
 end
 
+---@param msg string
 function frame:CHAT_MSG_SYSTEM(msg)
     OnChat(msg)
 end
 
+---@param spellID number
 function frame:LEARNED_SPELL_IN_TAB(spellID)
     SpellbookLearned("LEARNED_SPELL_IN_TAB", spellID)
 end
 
+---@param spellID number
 function frame:LEARNED_SPELL_IN_SKILL_LINE(spellID)
     SpellbookLearned("LEARNED_SPELL_IN_SKILL_LINE", spellID)
 end
@@ -239,14 +272,19 @@ function frame:TRAINER_CLOSED()
     ns.Debug("trainer window closed")
 end
 
-frame:SetScript("OnEvent", function(self, event, ...)
+frame:SetScript("OnEvent", function(
+    self,
+    event --[[@as string]],
+    ...
+)
     self[event](self, ...)
 end)
 frame:RegisterEvent("ADDON_LOADED")
 
--- For /pal sim: feed a system chat line through the real detection, as if it had just arrived.
--- The login and trainer guards and the duplicate window are lifted for it, so it works anytime.
--- Returns whether the line counted as learning a pet ability.
+---For /pal sim: feed a system chat line through the real detection, as if it had just arrived.
+---The login and trainer guards and the duplicate window are lifted for it, so it works anytime.
+---@param msg string
+---@return boolean counted whether the line counted as learning a pet ability
 function ns.SimulateChat(msg)
     local wasReady, wasAtTrainer = ready, atTrainer
     ready, atTrainer = true, false
