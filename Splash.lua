@@ -195,19 +195,20 @@ end)
 
 -- info: { name, rank, icon, source }. source is a line under the rank, such as where it came from.
 function ns.ShowSplash(info)
-    local db = ns.db or ns.defaults
+    -- Before the settings have loaded (nobody can trigger that in game) the defaults apply.
+    local db = ns.db or ns.DEFAULTS
     icon:SetTexture(info.icon or FALLBACK_ICON)
     spellName:Set("SetText", info.name or "?")
     rankText:Set("SetText", info.rank or "")
     subText:Set("SetText", info.source or "Teach it to your pet from the Beast Training window.")
 
-    frame:SetScale(db.scale or 1)
+    frame:SetScale(db.scale --[[@as number]])
     PositionFrame()
     frame:SetAlpha(1)
     bg:SetAlpha(0)
     content:SetAlpha(0)
     clock, fadeStart = 0, nil
-    fadeAt = math.max(1, tonumber(db.duration) or ns.defaults.duration)
+    fadeAt = db.duration
     frame:SetScript("OnUpdate", Animate)
     frame:Show()
 

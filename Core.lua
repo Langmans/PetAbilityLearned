@@ -1,11 +1,20 @@
 local ADDON_NAME, ns = ...
 
-ns.defaults = {
-    duration = 6, -- seconds the splash stays up before it fades
-    sound = true,
-    scale = 1.0,
+-- Shared helpers and the saved settings. Loaded first; every other file uses them.
+--
+-- Globals this file writes: PetAbilityLearnedDB, the SavedVariables from the .toc. The language
+-- server only knows it when it reads the .toc, so each write carries a create-global exception.
+
+-- Saved account-wide. The saved file keeps only what the player changed: ns.db reads a missing
+-- value from here through a metatable, and StripDefaults removes values equal to their default
+-- at logout. A default changed in a later version so reaches everyone who never changed it.
+-- pos has no default: without it the splash sits in its standard spot.
+---@type {duration: number, scale: number, sound: boolean, debug: boolean}
+ns.DEFAULTS = {
+    duration = 6, -- /pal duration <seconds>
+    scale = 1, -- /pal scale <0.3-3>
+    sound = true, -- /pal sound on|off
     debug = false, -- /pal debug
-    pos = nil, -- { point, relativePoint, x, y } once the splash has been dragged
 }
 
 function ns.Print(msg)
@@ -67,14 +76,50 @@ function ns.PetSpells()
     return spells
 end
 
+---A dragged position as saved: { point, relativePoint, x, y }, or nil when anything is off.
+---@param saved any
+---@return table?
+local function cleanPos(saved)
+    if type(saved) ~= "table" then return nil end
+    local point, relativePoint, x, y = saved[1], saved[2], saved[3], saved[4]
+    if type(point) ~= "string" or type(relativePoint) ~= "string" then return nil end
+    if type(x) ~= "number" or type(y) ~= "number" then return nil end
+    return { point, relativePoint, x, y }
+end
+
+---Creates or repairs the saved settings and makes them ns.db. Called on ADDON_LOADED, when the
+---client has filled in the saved table.
+function ns.LoadSettings()
+    ---@diagnostic disable-next-line: create-global
+    if type(PetAbilityLearnedDB) ~= "table" then PetAbilityLearnedDB = {} end
+    local db = PetAbilityLearnedDB
+    -- A broken value is dropped, so the default shows through.
+    for key, default in pairs(ns.DEFAULTS) do
+        if db[key] ~= nil and type(db[key]) ~= type(default) then db[key] = nil end
+    end
+    setmetatable(db, { __index = ns.DEFAULTS })
+    -- Numbers are put back in range: whole seconds from 1, a scale from 0.3 to 3.
+    db.duration = math.max(1, math.floor(db.duration))
+    db.scale = math.min(3, math.max(0.3, db.scale))
+    db.pos = cleanPos(db.pos)
+    ns.db = db
+end
+
+---Removes the settings that equal their default, so the saved file keeps only what the player
+---changed. Called on PLAYER_LOGOUT, just before the client writes the file; ns.db keeps working
+---through its metatable.
+function ns.StripDefaults()
+    for key, default in pairs(ns.DEFAULTS) do
+        if rawget(ns.db, key) == default then ns.db[key] = nil end
+    end
+end
+
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
-frame:SetScript("OnEvent", function(self, _, name)
+frame:RegisterEvent("PLAYER_LOGOUT")
+frame:SetScript("OnEvent", function(self, event, name)
+    if event == "PLAYER_LOGOUT" then return ns.StripDefaults() end
     if name ~= ADDON_NAME then return end
-    PetAbilityLearnedDB = PetAbilityLearnedDB or {}
-    for key, value in pairs(ns.defaults) do
-        if PetAbilityLearnedDB[key] == nil then PetAbilityLearnedDB[key] = value end
-    end
-    ns.db = PetAbilityLearnedDB
+    ns.LoadSettings()
     self:UnregisterEvent("ADDON_LOADED")
 end)

@@ -37,17 +37,22 @@ round icon, glowing text, a short fade-in and fade-out.
 
 | Command | Effect |
 | --- | --- |
-| `/pal config` | open the about panel (Esc > Options > AddOns) |
+| `/pal` | status line (current settings) with the list of commands; also for anything unknown |
+| `/pal config` (or `options`) | open the about panel (Esc > Options > AddOns) |
 | `/pal test [name]` | show the splash only, for Claw or `name` |
 | `/pal sim [name]` | feed a fake "You have learned a new ability: Claw (Rank 2)." line through the real detection, ignoring the login wait, trainer window and duplicate window; says so when the name is not a wild pet ability |
-| `/pal duration <s>` | seconds before it fades (default 6) |
-| `/pal scale <n>` | size, 0.3 to 3 |
-| `/pal sound` | toggle the level-up sound |
+| `/pal duration <s>` | whole seconds before it fades, from 1 (default 6) |
+| `/pal scale <n>` | size, 0.3 to 3 (default 1) |
+| `/pal sound on\|off` | the level-up sound (default on) |
 | `/pal reset` | default position |
 | `/pal debug` | trace in chat every learn the detection sees and what it decided (also a checkbox in the panel) |
 
 Drag the splash to move it, right-click to close it, hover to keep it up.
-Settings are in `PetAbilityLearnedDB` (account-wide).
+
+Settings are in `PetAbilityLearnedDB` (account-wide): `duration`, `scale`,
+`sound`, `debug` and `pos` (the dragged spot). The file keeps only what differs
+from the defaults in `Core.lua`; a missing value reads the default, a broken
+one is dropped on load, and numbers are put back in range.
 
 The about panel shows version, author and license from the `.toc`, a copy box
 for `X-Website` once the `.toc` has one, what the addon does, the Debug trace

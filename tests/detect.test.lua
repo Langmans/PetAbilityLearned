@@ -167,7 +167,9 @@ test("other classes do not listen at all", function()
 end)
 
 test("an event the client lacks does not stop the others", function()
-    local client = NewClient({ knownEvents = { PLAYER_LOGIN = true, ADDON_LOADED = true, CHAT_MSG_SYSTEM = true } })
+    local client = NewClient({
+        knownEvents = { PLAYER_LOGIN = true, PLAYER_LOGOUT = true, ADDON_LOADED = true, CHAT_MSG_SYSTEM = true },
+    })
     client:login()
     client:chat(client:learnLine("Claw (Rank 2)"))
     client:advance(0.3)
