@@ -1,4 +1,4 @@
-local ADDON_NAME, ns = ...
+local _, ns = ...
 
 -- Shared helpers and the saved settings. Loaded after Locale.lua (ns.Print needs ns.L) and before
 -- every module that uses them.
@@ -115,13 +115,3 @@ function ns.StripDefaults()
         if rawget(ns.db, key) == default then ns.db[key] = nil end
     end
 end
-
-local frame = CreateFrame("Frame")
-frame:RegisterEvent("ADDON_LOADED")
-frame:RegisterEvent("PLAYER_LOGOUT")
-frame:SetScript("OnEvent", function(self, event, name)
-    if event == "PLAYER_LOGOUT" then return ns.StripDefaults() end
-    if name ~= ADDON_NAME then return end
-    ns.LoadSettings()
-    self:UnregisterEvent("ADDON_LOADED")
-end)

@@ -1,4 +1,4 @@
-local _, ns = ...
+local ADDON_NAME, ns = ...
 
 -- A hunter learns a Beast Training ability by using it on a tamed pet that already has it. The game
 -- reports it as a system chat line ("You have learned a new ability: Claw (Rank 2).") and possibly as
@@ -171,38 +171,78 @@ local function OnChat(msg)
     return false
 end
 
+local function SpellbookLearned(event, spellID)
+    ns.Debug(("%s: spell %s"):format(event, tostring(spellID)))
+    local name, rank = ns.SpellInfo(spellID)
+    Learned(Plain(name), Plain(rank), spellID)
+end
+
+-- Events: one method per event on this frame, named after the event and called with the event's
+-- own arguments. Only ADDON_LOADED is registered up front; it registers the rest once the saved
+-- settings are there. PLAYER_LOGOUT strips the default values from them before the client saves
+-- them.
+--
+-- Only a hunter learns pet abilities. On any other class the addon stays loaded (the addon list is
+-- account-wide, so disabling it here would disable it for the hunters too) but registers nothing
+-- past PLAYER_LOGOUT, while /pal and the options panel keep working.
 local frame = CreateFrame("Frame")
-frame:RegisterEvent("PLAYER_LOGIN")
-frame:SetScript("OnEvent", function(self, event, arg1)
-    if event == "PLAYER_LOGIN" then
-        local _, class = UnitClass("player")
-        if class ~= "HUNTER" then return end
-        for _, name in ipairs({
-            "CHAT_MSG_SYSTEM",
-            "LEARNED_SPELL_IN_TAB",
-            "LEARNED_SPELL_IN_SKILL_LINE",
-            "TRAINER_SHOW",
-            "TRAINER_CLOSED",
-        }) do
-            pcall(self.RegisterEvent, self, name) -- not every client has every event
-        end
-        C_Timer.After(5, function()
-            ready = true
-        end)
-    elseif event == "CHAT_MSG_SYSTEM" then
-        OnChat(arg1)
-    elseif event == "LEARNED_SPELL_IN_TAB" or event == "LEARNED_SPELL_IN_SKILL_LINE" then
-        ns.Debug(("%s: spell %s"):format(event, tostring(arg1)))
-        local name, rank = ns.SpellInfo(arg1)
-        Learned(Plain(name), Plain(rank), arg1)
-    elseif event == "TRAINER_SHOW" then
-        atTrainer = true
-        ns.Debug("trainer window open: learns are ignored")
-    elseif event == "TRAINER_CLOSED" then
-        atTrainer = false
-        ns.Debug("trainer window closed")
+
+function frame:ADDON_LOADED(name)
+    if name ~= ADDON_NAME then return end
+    self:UnregisterEvent("ADDON_LOADED")
+    ns.LoadSettings()
+    self:RegisterEvent("PLAYER_LOGOUT")
+    ns.isHunter = select(2, UnitClass("player")) == "HUNTER"
+    if not ns.isHunter then return end
+    self:RegisterEvent("PLAYER_LOGIN")
+    for _, event in ipairs({
+        "CHAT_MSG_SYSTEM",
+        "LEARNED_SPELL_IN_TAB",
+        "LEARNED_SPELL_IN_SKILL_LINE",
+        "TRAINER_SHOW",
+        "TRAINER_CLOSED",
+    }) do
+        pcall(self.RegisterEvent, self, event) -- not every client has every event
     end
+end
+
+function frame:PLAYER_LOGOUT()
+    ns.StripDefaults()
+end
+
+-- The spells replayed at login arrive in the next seconds; learns count after that.
+function frame:PLAYER_LOGIN()
+    C_Timer.After(5, function()
+        ready = true
+    end)
+end
+
+function frame:CHAT_MSG_SYSTEM(msg)
+    OnChat(msg)
+end
+
+function frame:LEARNED_SPELL_IN_TAB(spellID)
+    SpellbookLearned("LEARNED_SPELL_IN_TAB", spellID)
+end
+
+function frame:LEARNED_SPELL_IN_SKILL_LINE(spellID)
+    SpellbookLearned("LEARNED_SPELL_IN_SKILL_LINE", spellID)
+end
+
+function frame:TRAINER_SHOW()
+    atTrainer = true
+    ns.Debug("trainer window open: learns are ignored")
+end
+
+function frame:TRAINER_CLOSED()
+    atTrainer = false
+    ns.Debug("trainer window closed")
+end
+
+frame:SetScript("OnEvent", function(self, event, ...)
+    self[event](self, ...)
 end)
+frame:RegisterEvent("ADDON_LOADED")
 
 -- For /pal sim: feed a system chat line through the real detection, as if it had just arrived.
 -- The login and trainer guards and the duplicate window are lifted for it, so it works anytime.

@@ -38,8 +38,7 @@ local function onOff(rest)
 end
 
 local function status()
-    local _, class = UnitClass("player")
-    if class ~= "HUNTER" then Print(L.NOT_HUNTER) end
+    if not ns.isHunter then Print(L.NOT_HUNTER) end
     local db = ns.db
     Print(
         ns.Format(
