@@ -74,7 +74,7 @@ local Commands = {}
 ---/pal test [name]: the splash only, no detection. rest keeps the case it was typed in.
 function Commands.test(rest)
     local spell, rank, icon = testSpell(rest)
-    ns.ShowSplash({ name = spell, rank = rank, icon = icon })
+    ns.ShowSplash({ name = spell, rank = rank, icon = icon, petPortrait = true })
 end
 
 ---/pal sim [name]: a learn line as the game would print it, through the real detection.

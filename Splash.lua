@@ -6,6 +6,8 @@ local _, ns = ...
 local FRAME_WIDTH, FRAME_HEIGHT = 440, 236
 local ICON_SIZE = 64
 local RING_SIZE = ICON_SIZE + 6
+local PORTRAIT_SIZE = 34
+local PORTRAIT_RING_SIZE = PORTRAIT_SIZE + 4
 local BG_OPACITY = 0.75
 local BG_LAYERS = 28
 local BG_FADE_FRACTION = 0.12 -- fade band per side, as a fraction of that side
@@ -141,8 +143,19 @@ icon:SetSize(ICON_SIZE, ICON_SIZE)
 icon:SetPoint("CENTER", ring, "CENTER")
 icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
+-- The pet's portrait as a badge on the lower right of the ring, in a ring of its own. It hangs
+-- off the ring, so it follows the ring's pop.
+local portraitRing = content:CreateTexture(nil, "ARTWORK", nil, 3)
+portraitRing:SetSize(PORTRAIT_RING_SIZE, PORTRAIT_RING_SIZE)
+portraitRing:SetPoint("CENTER", ring, "BOTTOMRIGHT", -6, 6)
+portraitRing:SetColorTexture(HUNTER_GREEN[1], HUNTER_GREEN[2], HUNTER_GREEN[3], 1)
+
+local portrait = content:CreateTexture(nil, "ARTWORK", nil, 4)
+portrait:SetSize(PORTRAIT_SIZE, PORTRAIT_SIZE)
+portrait:SetPoint("CENTER", portraitRing, "CENTER")
+
 if content.CreateMaskTexture then
-    for _, tex in ipairs({ ring, icon }) do
+    for _, tex in ipairs({ ring, icon, portraitRing, portrait }) do
         local mask = content:CreateMaskTexture()
         mask:SetAllPoints(tex)
         mask:SetTexture(CIRCLE_MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
@@ -168,6 +181,7 @@ subText:Set("SetTextColor", 0.8, 0.8, 0.8)
 
 -- The visible parts as fields, the way a template's parentKeys would be.
 frame.Icon, frame.Name, frame.Rank, frame.Source = icon, spellName.main, rankText.main, subText.main
+frame.Portrait = portrait
 
 -- Intro and outro run on one OnUpdate clock so a new splash can restart them cleanly.
 
@@ -243,6 +257,7 @@ end)
 ---@field rank string?
 ---@field icon (number|string)? texture; the Beast Training icon when nil
 ---@field source string? the line under the rank, such as where it came from
+---@field petPortrait boolean? show the active pet's portrait as a badge on the icon
 
 ---@param info SplashInfo
 function ns.ShowSplash(info)
@@ -251,6 +266,12 @@ function ns.ShowSplash(info)
     spellName:Set("SetText", info.name or "?")
     rankText:Set("SetText", info.rank or "")
     subText:Set("SetText", info.source or ns.L.SPLASH_TEACH)
+
+    -- The portrait is drawn from the pet as it is right now, the pet the ability came from.
+    local withPortrait = info.petPortrait and UnitExists("pet") and SetPortraitTexture ~= nil
+    if withPortrait then SetPortraitTexture(portrait, "pet") end
+    portrait:SetShown(withPortrait)
+    portraitRing:SetShown(withPortrait)
 
     frame:SetScale(db.scale)
     PositionFrame()

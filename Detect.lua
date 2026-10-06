@@ -131,6 +131,8 @@ local function Flush()
         rank = info.rank or (petSpell and petSpell.rank),
         icon = info.icon or (petSpell and petSpell.icon) or SpellTextureByName(info.name),
         source = source,
+        -- Only when the pet out has the ability: then it is the one it came from.
+        petPortrait = petSpell ~= nil,
     })
 end
 

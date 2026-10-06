@@ -75,6 +75,38 @@ test("the splash stays as long as the duration setting says", function()
     eq(client.splash.shown, false)
 end)
 
+test("a learn from the pet out shows its portrait as a badge", function()
+    local client = NewClient():login()
+    client:chat(client:learnLine("Claw (Rank 2)"))
+    client:advance(0.3)
+    eq(client.splash.Portrait.shown, true)
+    eq(client.splash.Portrait.texture, "portrait:pet:Nightstalker")
+end)
+
+test("no portrait without a pet, or when the pet out does not have the ability", function()
+    local client = NewClient():login()
+    client:chat(client:learnLine("Bite (Rank 1)"))
+    client:advance(0.3)
+    eq(client:splashName(), "Bite")
+    eq(client.splash.Portrait.shown, false, "Nightstalker has no Bite: it came from another pet")
+
+    client.pet = nil
+    client.ns.ShowSplash({ name = "Claw", petPortrait = true })
+    eq(client.splash.Portrait.shown, false, "no pet out")
+end)
+
+test("a client without SetPortraitTexture shows no portrait", function()
+    local client = NewClient({ noPortraitAPI = true }):login()
+    client:slash("test")
+    eq(client.splash.Portrait.shown, false)
+end)
+
+test("/pal test shows the portrait when a pet is out", function()
+    local client = NewClient():login():slash("test")
+    eq(client.splash.Portrait.texture, "portrait:pet:Nightstalker")
+    eq(client.splash.Portrait.shown, true)
+end)
+
 test("a client without mask textures still builds the splash", function()
     local client = NewClient({ noMasks = true }):login()
     showClaw(client)

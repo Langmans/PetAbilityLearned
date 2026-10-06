@@ -35,7 +35,7 @@ function SpellLink(id, name)
     return ("|cff71d5ff|Hspell:%d:0|h[%s]|h|r"):format(id, name)
 end
 
----@param opts {locale: string?, class: string?, savedDB: table?, oldSpellAPI: boolean?, oldSpellBookAPI: boolean?, noPetSpellAPI: boolean?, noLearnStrings: boolean?, noMasks: boolean?, noTextureAPI: boolean?}?
+---@param opts {locale: string?, class: string?, savedDB: table?, oldSpellAPI: boolean?, oldSpellBookAPI: boolean?, noPetSpellAPI: boolean?, noLearnStrings: boolean?, noMasks: boolean?, noTextureAPI: boolean?, noPortraitAPI: boolean?, oldCheckButton: boolean?, knownEvents: table?, metadata: table?, noAddOnsAPI: boolean?}?
 function NewClient(opts)
     opts = opts or {}
     -- opts.locale: the client's language. Spell names and the learn line exist here for enUS and
@@ -87,6 +87,15 @@ function NewClient(opts)
             tbl[key] = nil
         end
         return tbl
+    end
+    -- The portrait is recorded as "portrait:<unit>:<name>", so a test sees whose it is. Absent
+    -- with opts.noPortraitAPI.
+    if opts.noPortraitAPI then
+        SetPortraitTexture = nil
+    else
+        function SetPortraitTexture(texture, unit)
+            texture.texture = ("portrait:%s:%s"):format(unit, UnitName(unit))
+        end
     end
     function PlaySound(id, channel)
         client.sounds[#client.sounds + 1] = { id = id, channel = channel }
@@ -208,6 +217,9 @@ function NewClient(opts)
     end
     function Region:SetSize(width, height)
         self.width, self.height = width, height
+    end
+    function Region:SetShown(shown)
+        self.shown = shown and true or false
     end
     function Region:Show()
         self.shown = true
