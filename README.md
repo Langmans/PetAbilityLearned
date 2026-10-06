@@ -72,7 +72,15 @@ npm run check
 
 - `npm test` runs `tests/*.test.lua` in fengari against a simulated client
   (`tests/wow.lua`) and reports line coverage per file; the target is 100%.
-- `npm run lint` runs StyLua and WoW Lua LS (from its VS Code extension).
+- `npm run lint` runs StyLua and WoW Lua LS (from its VS Code extension). Its
+  type coverage is at 100%. The summary does not say which symbols are
+  unresolved; `wowlua_ls dump-types --with-stubs .` lists every name with its
+  type (look for `any`, `?` and `<none>`), and `wowlua_ls evaluate
+  --with-stubs <file>` reports `unknown-param-type` for parameters such as an
+  unannotated `_`. Two things the language server gets wrong here: a field
+  of `ns` only gets its type where it is first declared (Core.lua), and
+  writing `ns.db.x = …` directly widens the field's type, so writes go
+  through a local `db`.
 - `npm run format` formats with StyLua.
 
 ## Localization

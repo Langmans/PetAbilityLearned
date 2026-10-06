@@ -64,9 +64,13 @@ end
 ---@return string?
 local function Pattern(fmt)
     if type(fmt) ~= "string" then return nil end
-    fmt = fmt:gsub("%%%d%$", "%%"):gsub("%%s", "\1")
-    fmt = fmt:gsub("([%%%(%)%.%+%-%*%?%[%]%^%$])", "%%%1"):gsub("\1", "(.+)")
-    return "^" .. fmt .. "$"
+    -- Positional arguments (%1$s) become plain %s, each %s a marker, the rest of the text is
+    -- escaped, and each marker becomes a capture.
+    local plain = fmt:gsub("%%%d%$", "%%")
+    local marked = plain:gsub("%%s", "\1")
+    local escaped = marked:gsub("([%%%(%)%.%+%-%*%?%[%]%^%$])", "%%%1")
+    local pattern = escaped:gsub("\1", "(.+)")
+    return "^" .. pattern .. "$"
 end
 
 ---@type string[]
@@ -77,7 +81,7 @@ for _, fmt in ipairs({ ERR_LEARN_ABILITY_S, ERR_LEARN_SPELL_S }) do
 end
 
 ---A string the addon may read: not secret (Forever hides some values in combat) and not empty.
----@param v any
+---@param v GameValue
 ---@return string?
 local function Plain(v)
     return type(v) == "string" and not (issecretvalue and issecretvalue(v)) and v ~= "" and v or nil
@@ -179,7 +183,7 @@ local function Learned(name, rank, spellID)
 end
 
 ---A system chat line; returns whether it reported learning a pet ability.
----@param line any
+---@param line string?
 ---@return boolean
 local function OnChat(line)
     local msg = Plain(line)
@@ -222,7 +226,9 @@ function frame:ADDON_LOADED(name)
     self:UnregisterEvent("ADDON_LOADED")
     ns.LoadSettings()
     self:RegisterEvent("PLAYER_LOGOUT")
-    ns.isHunter = select(2, UnitClass("player")) == "HUNTER"
+    local _, class = UnitClass("player")
+    ---@type boolean
+    ns.isHunter = class == "HUNTER"
     if not ns.isHunter then return end
     self:RegisterEvent("PLAYER_LOGIN")
     for _, event in ipairs({

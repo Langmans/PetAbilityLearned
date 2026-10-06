@@ -35,7 +35,7 @@ ns.splash = frame
 ---Puts the splash where it was dragged to, or in its standard spot above the centre.
 local function PositionFrame()
     frame:ClearAllPoints()
-    local pos = ns.db and ns.db.pos
+    local pos = ns.db.pos
     if pos and pos[1] then
         frame:SetPoint(pos[1], UIParent, pos[2], pos[3], pos[4])
     else
@@ -53,7 +53,8 @@ frame:SetScript("OnDragStop", function(
 )
     self:StopMovingOrSizing()
     local point, _, relativePoint, x, y = self:GetPoint(1)
-    if ns.db and point then ns.db.pos = { point, relativePoint, x, y } end
+    local db = ns.db
+    if point then db.pos = { point, relativePoint, x, y } end
 end)
 
 -- Background: stacked black layers, each inset a little further, so the panel is solid in the
@@ -197,6 +198,7 @@ end
 ---@type number, number, number?
 local clock, fadeAt, fadeStart = 0, 0, nil
 
+---@param _ Frame the splash
 ---@param elapsed number seconds since the previous frame
 local function Animate(_, elapsed)
     clock = clock + elapsed
@@ -244,9 +246,7 @@ end)
 
 ---@param info SplashInfo
 function ns.ShowSplash(info)
-    -- Before the settings have loaded (nobody can trigger that in game) the defaults apply.
-    ---@type Settings
-    local db = ns.db or ns.DEFAULTS
+    local db = ns.db
     icon:SetTexture(info.icon or FALLBACK_ICON)
     spellName:Set("SetText", info.name or "?")
     rankText:Set("SetText", info.rank or "")

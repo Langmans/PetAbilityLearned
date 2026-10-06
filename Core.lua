@@ -18,6 +18,10 @@ local _, ns = ...
 ---@field debug boolean
 ---@field pos [string, string, number, number]? point, relativePoint, x, y of a dragged splash
 
+---A value the game hands over without a known type: from a SavedVariables file, an event
+---argument or an API return.
+---@alias GameValue string|number|boolean|table|nil
+
 ---A spell in the active pet's spellbook.
 ---@class PetSpell
 ---@field id number?
@@ -32,6 +36,14 @@ ns.DEFAULTS = {
     debug = false, -- /pal debug
 }
 
+---The settings: the defaults until LoadSettings replaces them with the saved table on
+---ADDON_LOADED. Nothing writes to them before then (no command or event runs that early).
+---@type Settings
+ns.db = ns.DEFAULTS
+
+---Whether this character is a hunter; set on ADDON_LOADED.
+ns.isHunter = false
+
 ---@param message string
 function ns.Print(message)
     print("|cffabd473" .. ns.L.CHAT_PREFIX .. "|r " .. message)
@@ -40,7 +52,7 @@ end
 ---/pal debug traces the detection in chat: every learn it sees and what it decided.
 ---@param message string
 function ns.Debug(message)
-    if ns.db and ns.db.debug then ns.Print("|cff88ccff[debug]|r " .. message) end
+    if ns.db.debug then ns.Print("|cff88ccff[debug]|r " .. message) end
 end
 
 ---Spell info across client generations: C_Spell on newer clients, GetSpellInfo on older ones.
@@ -62,10 +74,9 @@ function ns.SpellInfo(id)
     if C_Spell and C_Spell.GetSpellSubtext then
         rank = C_Spell.GetSpellSubtext(id)
     elseif GetSpellSubtext then
-        rank = GetSpellSubtext(id)
+        rank = GetSpellSubtext(id) --[[@as string?]]
     end
-    if rank == "" then rank = nil end
-    return name, rank, icon
+    return name, rank ~= "" and rank or nil, icon
 end
 
 ---The spells in the active pet's spellbook, keyed by name, to fill in the rank and icon of an
@@ -75,10 +86,13 @@ end
 function ns.PetSpells()
     ---@type table<string, PetSpell>
     local spells = {}
+    ---@type (fun(): GameValue)?
     local hasPetSpells = (C_SpellBook and C_SpellBook.HasPetSpells) or HasPetSpells
     if not hasPetSpells then return spells end
-    local ok, num = pcall(hasPetSpells)
-    num = ok and tonumber(num) or 0
+    -- The first value is the count; the client also returns the pet's type ("PET", "DEMON").
+    ---@type boolean, GameValue
+    local ok, count = pcall(hasPetSpells)
+    local num = ok and tonumber(count) or 0
     for i = 1, num do
         ---@type string?, string?, number?
         local name, rank, id
@@ -102,10 +116,11 @@ function ns.PetSpells()
 end
 
 ---A dragged position as saved: { point, relativePoint, x, y }, or nil when anything is off.
----@param saved any
+---@param saved GameValue
 ---@return [string, string, number, number]?
 local function cleanPos(saved)
     if type(saved) ~= "table" then return nil end
+    ---@type GameValue, GameValue, GameValue, GameValue
     local point, relativePoint, x, y = saved[1], saved[2], saved[3], saved[4]
     if type(point) ~= "string" or type(relativePoint) ~= "string" then return nil end
     if type(x) ~= "number" or type(y) ~= "number" then return nil end
@@ -128,6 +143,7 @@ function ns.LoadSettings()
     db.duration = math.max(1, math.floor(db.duration))
     db.scale = math.min(3, math.max(0.3, db.scale))
     db.pos = cleanPos(db.pos)
+    ---@type Settings
     ns.db = db
 end
 

@@ -16,6 +16,7 @@ title:SetPoint("TOPLEFT", 16, -16)
 title:SetText(L.OPTIONS_TITLE)
 
 -- C_AddOns has GetAddOnMetadata on newer clients, the global on older ones.
+---@type fun(addon: string, key: string): string?
 local GetMetadata = C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata
 ---A "## Key: value" line of this addon's .toc.
 ---@param key string
@@ -45,22 +46,25 @@ if URL then
     website:SetText(URL)
     website:SetCursorPosition(0)
     -- Read-only: whatever is typed is put back, and a click selects it all for Ctrl+C.
-    website:SetScript("OnTextChanged", function(self, userInput)
+    ---@param _ EditBox the website box
+    ---@param userInput boolean true when the player typed, false when code set the text
+    local function onTextChanged(_, userInput)
         if not userInput then return end
-        self:SetText(URL)
-        self:HighlightText()
+        website:SetText(URL)
+        website:HighlightText()
+    end
+    website:SetScript("OnTextChanged", onTextChanged)
+    website:SetScript("OnEditFocusGained", function()
+        website:HighlightText()
     end)
-    website:SetScript("OnEditFocusGained", function(self)
-        self:HighlightText()
+    website:SetScript("OnEditFocusLost", function()
+        website:HighlightText(0, 0)
     end)
-    website:SetScript("OnEditFocusLost", function(self)
-        self:HighlightText(0, 0)
+    website:SetScript("OnEscapePressed", function()
+        website:ClearFocus()
     end)
-    website:SetScript("OnEscapePressed", function(self)
-        self:ClearFocus()
-    end)
-    website:SetScript("OnEnterPressed", function(self)
-        self:ClearFocus()
+    website:SetScript("OnEnterPressed", function()
+        website:ClearFocus()
     end)
     ns.WebsiteBox = website
     below = websiteLabel
@@ -76,16 +80,18 @@ description:SetText(L.OPTION_DESCRIPTION)
 -- panel is shown, so a /pal debug in the meantime shows up.
 local debugBox = CreateFrame("CheckButton", nil, panel, "UICheckButtonTemplate")
 debugBox:SetPoint("TOPLEFT", description, "BOTTOMLEFT", -2, -16)
--- The label's parentKey is Text on newer clients, text on older ones.
-local debugLabel = debugBox.Text or debugBox.text
+-- The label's parentKey is Text on newer clients, text on older ones (which the language server's
+-- stubs do not know, hence rawget).
+local debugLabel = debugBox.Text or rawget(debugBox, "text") --[[@as FontString]]
 debugLabel:SetFontObject("GameFontHighlight")
 debugLabel:SetText(L.OPTION_DEBUG)
 local debugNote = panel:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
 debugNote:SetPoint("TOPLEFT", debugLabel, "BOTTOMLEFT", 0, -2)
 debugNote:SetText(L.OPTION_DEBUG_NOTE)
-debugBox:SetScript("OnClick", function(self)
+debugBox:SetScript("OnClick", function()
     -- GetChecked returns 1/nil on some clients; the saved value must be a boolean.
-    ns.db.debug = self:GetChecked() and true or false
+    local db = ns.db
+    db.debug = debugBox:GetChecked() and true or false
 end)
 panel:SetScript("OnShow", function()
     debugBox:SetChecked(ns.db.debug)
@@ -97,7 +103,7 @@ ns.DebugBox = debugBox
 ---@param anchor Region
 ---@param x number
 ---@param onClick fun()
----@return Button
+---@return UIPanelButtonTemplate
 local function AddButton(label, anchor, x, onClick)
     local button = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
     button:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", x, -16)
@@ -107,23 +113,28 @@ local function AddButton(label, anchor, x, onClick)
     return button
 end
 
+---@type UIPanelButtonTemplate
 ns.TestButton = AddButton(L.OPTION_TEST, debugNote, 2, function()
     SlashCmdList.PETABILITYLEARNED("test")
 end)
+---@type UIPanelButtonTemplate
 ns.SimButton = AddButton(L.OPTION_SIM, debugNote, 174, function()
     SlashCmdList.PETABILITYLEARNED("sim")
 end)
 
+---What Settings.RegisterCanvasLayoutCategory returns; the language server's stubs leave it untyped.
+---@class SettingsCategory
+---@field GetID fun(self: SettingsCategory): string|number
+
+---@type SettingsCategory
 local category = Settings.RegisterCanvasLayoutCategory(panel, L.OPTIONS_TITLE)
 Settings.RegisterAddOnCategory(category)
 
 -- In combat the settings window is not opened from an addon: the call can be blocked or taint
 -- the window. /pal config then waits for the end of combat and opens it once.
 local afterCombat = CreateFrame("Frame")
-afterCombat:SetScript("OnEvent", function(
-    self --[[@as Frame]]
-)
-    self:UnregisterEvent("PLAYER_REGEN_ENABLED")
+afterCombat:SetScript("OnEvent", function()
+    afterCombat:UnregisterEvent("PLAYER_REGEN_ENABLED")
     Settings.OpenToCategory(category:GetID())
 end)
 

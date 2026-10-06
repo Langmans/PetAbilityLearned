@@ -24,7 +24,8 @@ local COMMAND_LIST = table.concat({
 ---@param rest string
 ---@return string
 local function firstWord(rest)
-    return rest:lower():match("^%S*") or ""
+    local lowered = rest:lower()
+    return lowered:match("^%S*") or ""
 end
 
 ---"on" -> true, "off" -> false, anything else nil.
@@ -90,28 +91,32 @@ end
 function Commands.duration(rest)
     local seconds = tonumber(firstWord(rest))
     if not seconds then return status() end
-    ns.db.duration = math.max(1, math.floor(seconds))
-    Print(ns.Format("DURATION_SET", ns.db.duration))
+    local db = ns.db
+    db.duration = math.max(1, math.floor(seconds))
+    Print(ns.Format("DURATION_SET", db.duration))
 end
 
 ---/pal scale <0.3-3>
 function Commands.scale(rest)
     local scale = tonumber(firstWord(rest))
     if not scale then return status() end
-    ns.db.scale = math.min(3, math.max(0.3, scale))
-    Print(ns.Format("SCALE_SET", ns.db.scale))
+    local db = ns.db
+    db.scale = math.min(3, math.max(0.3, scale))
+    Print(ns.Format("SCALE_SET", db.scale))
 end
 
 ---/pal sound on|off
 function Commands.sound(rest)
     local on = onOff(rest)
     if on == nil then return status() end
-    ns.db.sound = on
+    local db = ns.db
+    db.sound = on
     Print(on and L.SOUND_ON or L.SOUND_OFF)
 end
 
 function Commands.reset()
-    ns.db.pos = nil
+    local db = ns.db
+    db.pos = nil
     Print(L.POSITION_RESET)
 end
 
@@ -121,15 +126,19 @@ end
 Commands.options = Commands.config
 
 function Commands.debug()
-    ns.db.debug = not ns.db.debug
-    Print(ns.db.debug and L.DEBUG_ON or L.DEBUG_OFF)
+    local db = ns.db
+    db.debug = not db.debug
+    Print(db.debug and L.DEBUG_ON or L.DEBUG_OFF)
 end
 
 SLASH_PETABILITYLEARNED1 = "/pal"
 SLASH_PETABILITYLEARNED2 = "/petabilitylearned"
+---@param message string? what was typed after /pal
 SlashCmdList.PETABILITYLEARNED = function(message)
-    local name, rest = (message or ""):match("^%s*(%S*)%s*(.-)%s*$")
-    local command = Commands[(name or ""):lower()]
+    local typed = message or ""
+    local name, rest = typed:match("^%s*(%S*)%s*(.-)%s*$")
+    local key = name or ""
+    local command = Commands[key:lower()]
     if command then
         command(rest or "")
     else
