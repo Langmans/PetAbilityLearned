@@ -22,6 +22,8 @@ ns.OptionsPanel = panel
 -- UIPanelScrollFrameTemplate puts its scroll bar just outside the frame's right edge, hence the
 -- room on the right.
 local CONTENT_WIDTH, CONTENT_BASE, ROW_HEIGHT = 600, 700, 16
+-- Where UICheckButtonTemplate's label starts, from the box's left edge (the box is 32 wide).
+local CHECKBOX_LABEL_X = 30
 local scroll = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
 scroll:SetPoint("TOPLEFT", 0, -4)
 scroll:SetPoint("BOTTOMRIGHT", -28, 4)
@@ -103,20 +105,32 @@ if URL then
     below = websiteLabel
 end
 
+-- From here on each element goes under the one before (`below`), at `x` pixels from the column's
+-- left edge. `belowX` is where `below` itself sits, so an indented line (a checkbox's note) does
+-- not push everything after it to the right.
+local belowX = 0
+
+---Anchors `region` `gap` pixels under the element before, `x` pixels into the column.
+---@param region Region
+---@param x number
+---@param gap number
+local function Place(region, x, gap)
+    region:SetPoint("TOPLEFT", below, "BOTTOMLEFT", x - belowX, -gap)
+    below, belowX = region, x
+end
+
 local description = content:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-description:SetPoint("TOPLEFT", below, "BOTTOMLEFT", 0, -20)
+Place(description, 0, 20)
 toRightEdge(description)
 description:SetText(L.OPTION_DESCRIPTION)
-below = description
 
 ---A heading in the panel's own gold, `gap` pixels under what came before.
 ---@param text string
 ---@param gap number
 local function AddHeading(text, gap)
     local heading = content:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
-    heading:SetPoint("TOPLEFT", below, "BOTTOMLEFT", 0, -gap)
+    Place(heading, 0, gap)
     heading:SetText(text)
-    below = heading
 end
 
 -- Settings.
@@ -139,7 +153,8 @@ local syncs = {}
 ---@return Slider
 local function AddSlider(name, key, low, high, step, format)
     local slider = CreateFrame("Slider", name, content, "OptionsSliderTemplate")
-    slider:SetPoint("TOPLEFT", below, "BOTTOMLEFT", 6, -32)
+    -- Room above for the title, which the template puts over the bar.
+    Place(slider, 6, 32)
     slider:SetWidth(300)
     slider:SetMinMaxValues(low, high)
     slider:SetValueStep(step)
@@ -167,7 +182,6 @@ local function AddSlider(name, key, low, high, step, format)
         -- SetValue only reports a change; the title must show an unchanged value too.
         text:SetText(format(ns.db[key]))
     end
-    below = slider
     return slider
 end
 
@@ -190,9 +204,9 @@ end
 
 -- The sound: three radio buttons under a label, one per mode.
 local soundLabel = content:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-soundLabel:SetPoint("TOPLEFT", below, "BOTTOMLEFT", -6, -28)
+-- Below the slider's own low/high labels.
+Place(soundLabel, 0, 28)
 soundLabel:SetText(L.OPTION_SOUND)
-below = soundLabel
 ---@type table<SoundMode, CheckButton>
 local soundButtons = {}
 for _, choice in ipairs({
@@ -203,7 +217,7 @@ for _, choice in ipairs({
     ---@type SoundMode
     local mode = choice[1]
     local radio = CreateFrame("CheckButton", nil, content, "UIRadioButtonTemplate")
-    radio:SetPoint("TOPLEFT", below, "BOTTOMLEFT", 0, -6)
+    Place(radio, 0, 6)
     local label = LabelOf(radio)
     label:SetFontObject("GameFontHighlightSmall")
     label:SetText(choice[2])
@@ -215,7 +229,6 @@ for _, choice in ipairs({
         end
     end)
     soundButtons[mode] = radio
-    below = radio
 end
 ns.SoundButtons = soundButtons
 syncs[#syncs + 1] = function()
@@ -231,12 +244,14 @@ end
 ---@return CheckButton
 local function AddCheckbox(key, label, note)
     local box = CreateFrame("CheckButton", nil, content, "UICheckButtonTemplate")
-    box:SetPoint("TOPLEFT", below, "BOTTOMLEFT", -2, -12)
+    -- The box has a few pixels of padding; two to the left lines it up with the text above.
+    Place(box, -2, 12)
     local text = LabelOf(box)
     text:SetFontObject("GameFontHighlight")
     text:SetText(label)
+    -- The note goes under the box, indented to where its label starts.
     local noteText = content:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
-    noteText:SetPoint("TOPLEFT", text, "BOTTOMLEFT", 0, -2)
+    Place(noteText, CHECKBOX_LABEL_X, 0)
     toRightEdge(noteText)
     noteText:SetText(note)
     box:SetScript("OnClick", function()
@@ -247,7 +262,6 @@ local function AddCheckbox(key, label, note)
     syncs[#syncs + 1] = function()
         box:SetChecked(ns.db[key])
     end
-    below = noteText
     return box
 end
 
@@ -258,39 +272,36 @@ ns.HintsBox = AddCheckbox("hints", L.OPTION_HINTS, L.OPTION_HINTS_NOTE)
 ---@type CheckButton
 ns.DebugBox = AddCheckbox("debug", L.OPTION_DEBUG, L.OPTION_DEBUG_NOTE)
 
----A button under `anchor`, `x` pixels to the right of its left edge.
+---A button with a label and a click handler, not yet placed.
 ---@param label string
----@param anchor Region
----@param x number
 ---@param onClick fun()
 ---@return UIPanelButtonTemplate
-local function AddButton(label, anchor, x, onClick)
+local function NewButton(label, onClick)
     local button = CreateFrame("Button", nil, content, "UIPanelButtonTemplate")
-    button:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", x, -16)
     button:SetSize(160, 24)
     button:SetText(label)
     button:SetScript("OnClick", onClick)
     return button
 end
 
-local buttonsAnchor = below
+-- The two buttons side by side; the second hangs off the first.
 ---@type UIPanelButtonTemplate
-ns.TestButton = AddButton(L.OPTION_TEST, buttonsAnchor, 2, function()
+ns.TestButton = NewButton(L.OPTION_TEST, function()
     SlashCmdList.PETABILITYLEARNED("test")
 end)
+Place(ns.TestButton, 0, 16)
 ---@type UIPanelButtonTemplate
-ns.SimButton = AddButton(L.OPTION_SIM, buttonsAnchor, 174, function()
+ns.SimButton = NewButton(L.OPTION_SIM, function()
     SlashCmdList.PETABILITYLEARNED("sim")
 end)
-below = ns.TestButton
+ns.SimButton:SetPoint("LEFT", ns.TestButton, "RIGHT", 12, 0)
 
 -- History.
 
 AddHeading(L.OPTION_HISTORY, 32)
 local historyNote = content:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
-historyNote:SetPoint("TOPLEFT", below, "BOTTOMLEFT", 0, -4)
+Place(historyNote, 0, 4)
 toRightEdge(historyNote)
-below = historyNote
 
 -- One font string per line, made as the history grows and reused after that.
 ---@type FontString[]
@@ -318,12 +329,17 @@ local function RefreshHistory()
     content:SetHeight(CONTENT_BASE + #history * ROW_HEIGHT)
 end
 
-panel:SetScript("OnShow", function()
+-- Fills every control and the history. The settings window calls a canvas frame's OnRefresh each
+-- time it shows it; OnShow alone is not enough, since showing a frame that is already shown (the
+-- canvas was up for another addon's panel) fires no OnShow.
+local function Refresh()
     for i = 1, #syncs do
         syncs[i]()
     end
     RefreshHistory()
-end)
+end
+panel.OnRefresh = Refresh
+panel:SetScript("OnShow", Refresh)
 
 ---What Settings.RegisterCanvasLayoutCategory returns; the language server's stubs leave it untyped.
 ---@class SettingsCategory

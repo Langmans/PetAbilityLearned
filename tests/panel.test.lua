@@ -20,6 +20,16 @@ test("the panel shows the current settings when it opens", function()
     eq(client.ns.DebugBox.checked, false)
 end)
 
+test("the settings window's OnRefresh fills the panel too, without an OnShow", function()
+    local client = NewClient({ savedDB = { sound = "off" }, savedDBPC = { history = { { name = "Bite", t = 1 } } } })
+    client:login()
+    local panel = client.ns.OptionsPanel
+    panel.OnRefresh(panel)
+    eq(client.ns.SoundButtons.off.checked, true)
+    eq(client.ns.HintsBox.checked, true)
+    eq(#client.ns.HistoryRows, 1)
+end)
+
 test("an unchanged value still gets its title", function()
     local client = showPanel(NewClient():login())
     client.ns.DurationSlider.Text.text = nil
