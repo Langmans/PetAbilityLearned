@@ -215,10 +215,26 @@ Needs Node.js. `npm install` once, then:
 - `npm run format` — formats all Lua with StyLua.
 - `npm run check` — lint, then tests.
 
-To try a change in the game, link the repository into the client's AddOns
-folder with a directory junction instead of copying it, e.g. in PowerShell:
-`New-Item -ItemType Junction -Path "<WoW>\Interface\AddOns\PetAbilityLearned"
--Target "<repository>"`.
+To play with it while working on it, give the client's AddOns folder a git
+worktree of its own on a local branch, so the game loads a clean checkout
+instead of whatever is half done in the repository:
+
+```bash
+git branch live main
+```
+
+```bash
+git worktree add "<WoW>/Interface/AddOns/PetAbilityLearned" live
+```
+
+`live` stays local (it has no upstream, so it is never pushed). To give the
+game a newer version, fast-forward it to `main`:
+
+```bash
+git -C "<WoW>/Interface/AddOns/PetAbilityLearned" merge --ff-only main
+```
+
+then `/reload` in the game.
 
 fengari is Lua 5.3 and WoW runs 5.1; the addon sticks to the shared subset and
 WoW Lua LS flags WoW-incompatible API use. What the simulation cannot show —

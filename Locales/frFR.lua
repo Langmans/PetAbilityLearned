@@ -44,6 +44,20 @@ ns.Locales.frFR = {
             .. "Les techniques achetées à un dresseur de familiers ne comptent pas.\n\n"
             .. "Faites glisser l'annonce pour la déplacer, clic droit pour la fermer ; elle reste tant que la "
             .. "souris est dessus. Tapez /pal pour les réglages.",
+        OPTION_SETTINGS = "Réglages",
+        OPTION_DURATION = "L'annonce reste %d secondes",
+        OPTION_SCALE = "Taille de l'annonce : %.2f",
+        OPTION_SOUND = "Son",
+        OPTION_SOUND_FAMILY = "Le cri de la famille du familier (montée de niveau s'il n'en a pas)",
+        OPTION_SOUND_LEVELUP = "Le son de la montée de niveau",
+        OPTION_SOUND_OFF = "Pas de son",
+        OPTION_SCREENSHOT = "Prendre une capture d'écran de chaque annonce",
+        OPTION_SCREENSHOT_NOTE = "Enregistrée dans le dossier Screenshots du jeu. Comme /pal screenshot on et off.",
+        OPTION_HINTS = "Dire ce qu'un nouveau familier peut apprendre",
+        OPTION_HINTS_NOTE = "En appelant ou en apprivoisant un familier, le chat nomme les techniques qu'il a à "
+            .. "un rang plus élevé que vous. Comme /pal hints on et off.",
+        OPTION_HISTORY = "Appris par ce personnage",
+        OPTION_HISTORY_NOTE = "%d apprises, les plus récentes en premier. Comme /pal history.",
         OPTION_DEBUG = "Trace de débogage",
         OPTION_DEBUG_NOTE = "Afficher dans le chat chaque apprentissage vu par l'addon et sa décision. "
             .. "Comme /pal debug.",

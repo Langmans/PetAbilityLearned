@@ -45,6 +45,20 @@ ns.Locales.esES = {
             .. "pantalla. Las habilidades compradas a un instructor de mascotas no cuentan.\n\n"
             .. "Arrastra el aviso para moverlo, clic derecho para cerrarlo; con el ratón encima se queda. "
             .. "Escribe /pal para los ajustes.",
+        OPTION_SETTINGS = "Ajustes",
+        OPTION_DURATION = "El aviso dura %d segundos",
+        OPTION_SCALE = "Tamaño del aviso: %.2f",
+        OPTION_SOUND = "Sonido",
+        OPTION_SOUND_FAMILY = "El grito de la familia de la mascota (subida de nivel si no tiene)",
+        OPTION_SOUND_LEVELUP = "El sonido de subida de nivel",
+        OPTION_SOUND_OFF = "Sin sonido",
+        OPTION_SCREENSHOT = "Hacer una captura de pantalla de cada aviso",
+        OPTION_SCREENSHOT_NOTE = "Se guarda en la carpeta Screenshots del juego. Igual que /pal screenshot on y off.",
+        OPTION_HINTS = "Decir lo que puede enseñar una mascota nueva",
+        OPTION_HINTS_NOTE = "Al invocar o domesticar una mascota, el chat nombra las habilidades que tiene a un "
+            .. "rango mayor que tú. Igual que /pal hints on y off.",
+        OPTION_HISTORY = "Aprendido por este personaje",
+        OPTION_HISTORY_NOTE = "%d aprendidas, las más recientes primero. Igual que /pal history.",
         OPTION_DEBUG = "Traza de depuración",
         OPTION_DEBUG_NOTE = "Mostrar en el chat cada aprendizaje que ve el addon y qué decidió. Igual que /pal debug.",
         OPTION_TEST = "Mostrar el aviso",

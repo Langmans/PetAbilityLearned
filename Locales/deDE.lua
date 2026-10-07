@@ -44,6 +44,20 @@ ns.Locales.deDE = {
             .. "Tierausbilder zählen nicht.\n\n"
             .. "Ziehe die Anzeige, um sie zu verschieben; Rechtsklick schließt sie; mit der Maus darüber bleibt "
             .. "sie stehen. Gib /pal für die Einstellungen ein.",
+        OPTION_SETTINGS = "Einstellungen",
+        OPTION_DURATION = "Anzeige bleibt %d Sekunden",
+        OPTION_SCALE = "Anzeigegröße: %.2f",
+        OPTION_SOUND = "Ton",
+        OPTION_SOUND_FAMILY = "Der Ruf der Tierfamilie (Stufenaufstieg, wenn sie keinen hat)",
+        OPTION_SOUND_LEVELUP = "Der Klang des Stufenaufstiegs",
+        OPTION_SOUND_OFF = "Kein Ton",
+        OPTION_SCREENSHOT = "Bei jeder Anzeige einen Screenshot machen",
+        OPTION_SCREENSHOT_NOTE = "Im Screenshots-Ordner des Spiels gespeichert. Wie /pal screenshot on und off.",
+        OPTION_HINTS = "Sagen, was ein neuer Begleiter beibringen kann",
+        OPTION_HINTS_NOTE = "Beim Rufen oder Zähmen eines Begleiters nennt der Chat die Fähigkeiten, die er in "
+            .. "einem höheren Rang hat als du. Wie /pal hints on und off.",
+        OPTION_HISTORY = "Von diesem Charakter gelernt",
+        OPTION_HISTORY_NOTE = "%d gelernt, die neuesten zuerst. Wie /pal history.",
         OPTION_DEBUG = "Debug-Ausgabe",
         OPTION_DEBUG_NOTE = "Im Chat jedes Lernen zeigen, das das Addon sieht, und was es entschieden hat. "
             .. "Wie /pal debug.",

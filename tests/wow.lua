@@ -35,7 +35,7 @@ function SpellLink(id, name)
     return ("|cff71d5ff|Hspell:%d:0|h[%s]|h|r"):format(id, name)
 end
 
----@param opts {locale: string?, class: string?, savedDB: table?, savedDBPC: table?, oldSpellAPI: boolean?, oldSpellBookAPI: boolean?, noPetSpellAPI: boolean?, noLearnStrings: boolean?, noMasks: boolean?, noTextureAPI: boolean?, noPortraitAPI: boolean?, oldCheckButton: boolean?, knownEvents: table?, metadata: table?, noAddOnsAPI: boolean?, oldTrainingPointsAPI: boolean?, noTrainingPointsAPI: boolean?, noCraftAPI: boolean?}?
+---@param opts {locale: string?, class: string?, savedDB: table?, savedDBPC: table?, oldSpellAPI: boolean?, oldSpellBookAPI: boolean?, noPetSpellAPI: boolean?, noLearnStrings: boolean?, noMasks: boolean?, noTextureAPI: boolean?, noPortraitAPI: boolean?, oldCheckButton: boolean?, knownEvents: table?, metadata: table?, noAddOnsAPI: boolean?, oldTrainingPointsAPI: boolean?, noTrainingPointsAPI: boolean?, noCraftAPI: boolean?, oldSlider: boolean?}?
 function NewClient(opts)
     opts = opts or {}
     -- opts.locale: the client's language. Spell names and the learn line exist here for enUS and
@@ -207,7 +207,8 @@ function NewClient(opts)
     local Region = {}
     -- Methods the addon tests for before calling them stay absent unless defined.
     -- So do parentKeys, which are fields rather than methods.
-    local OPTIONAL = { CreateMaskTexture = true, Text = true, text = true }
+    local OPTIONAL =
+        { CreateMaskTexture = true, Text = true, text = true, Low = true, High = true, SetObeyStepOnDrag = true }
     Region.__index = function(_, key)
         if OPTIONAL[key] then return Region[key] end
         return Region[key] or noop
@@ -226,6 +227,9 @@ function NewClient(opts)
     end
     function Region:SetScale(scale)
         self.scale = scale
+    end
+    function Region:SetWidth(width)
+        self.width = width
     end
     function Region:SetSize(width, height)
         self.width, self.height = width, height
@@ -319,6 +323,25 @@ function NewClient(opts)
             -- Some clients answer 1/nil rather than true/false.
             function frame:GetChecked()
                 return self.checked and 1 or nil
+            end
+        end
+        -- Like OptionsSliderTemplate: its labels as parentKeys, or with opts.oldSlider only as
+        -- global names ($parentText, ...) and without SetObeyStepOnDrag. SetValue reports a
+        -- change through OnValueChanged, as the client does.
+        if kind == "Slider" then
+            local text, low, high = newRegion(), newRegion(), newRegion()
+            if opts.oldSlider then
+                _G[name .. "Text"], _G[name .. "Low"], _G[name .. "High"] = text, low, high
+            else
+                frame.Text, frame.Low, frame.High = text, low, high
+                function frame:SetObeyStepOnDrag(obey)
+                    self.obeyStep = obey
+                end
+            end
+            function frame:SetValue(value)
+                if value == self.value then return end
+                self.value = value
+                if self.scripts.OnValueChanged then self.scripts.OnValueChanged(self, value) end
             end
         end
         return frame

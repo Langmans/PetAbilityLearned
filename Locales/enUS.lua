@@ -69,6 +69,22 @@ ns.Locales.enUS = {
             .. "from a pet trainer do not count.\n\n"
             .. "Drag the splash to move it, right-click to close it, hover to keep it up. "
             .. "Type /pal for the settings.",
+        OPTION_SETTINGS = "Settings",
+        -- Slider titles: whole seconds, a size like 1.25.
+        OPTION_DURATION = "Splash stays for %d seconds",
+        OPTION_SCALE = "Splash size: %.2f",
+        OPTION_SOUND = "Sound",
+        OPTION_SOUND_FAMILY = "The call of the pet's family (level-up when it has none)",
+        OPTION_SOUND_LEVELUP = "The level-up sound",
+        OPTION_SOUND_OFF = "No sound",
+        OPTION_SCREENSHOT = "Take a screenshot of each splash",
+        OPTION_SCREENSHOT_NOTE = "Saved in the game's Screenshots folder. Same as /pal screenshot on and off.",
+        OPTION_HINTS = "Say what a new pet can teach",
+        OPTION_HINTS_NOTE = "When you summon or tame a pet, chat names the abilities it has at a higher rank "
+            .. "than you. Same as /pal hints on and off.",
+        OPTION_HISTORY = "Learned on this character",
+        -- How many there are.
+        OPTION_HISTORY_NOTE = "%d learned, newest first. Same as /pal history.",
         OPTION_DEBUG = "Debug trace",
         OPTION_DEBUG_NOTE = "Print in chat every learn the addon sees and what it decided. Same as /pal debug.",
         OPTION_TEST = "Show the splash",

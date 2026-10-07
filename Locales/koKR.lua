@@ -43,6 +43,20 @@ ns.Locales.koKR = {
             .. "화면 가운데에 크게 표시됩니다. 소환수 조련사에게서 산 기술은 해당되지 않습니다.\n\n"
             .. "알림을 끌어서 옮기고, 오른쪽 클릭으로 닫고, 마우스를 올려 두면 계속 표시됩니다. "
             .. "설정은 /pal 을 입력하세요.",
+        OPTION_SETTINGS = "설정",
+        OPTION_DURATION = "알림 표시 시간: %d초",
+        OPTION_SCALE = "알림 크기: %.2f",
+        OPTION_SOUND = "소리",
+        OPTION_SOUND_FAMILY = "소환수 계열의 울음소리 (없으면 레벨 업 소리)",
+        OPTION_SOUND_LEVELUP = "레벨 업 소리",
+        OPTION_SOUND_OFF = "소리 없음",
+        OPTION_SCREENSHOT = "알림마다 스크린샷 찍기",
+        OPTION_SCREENSHOT_NOTE = "게임의 Screenshots 폴더에 저장됩니다. /pal screenshot on 및 off 와 같습니다.",
+        OPTION_HINTS = "새 소환수가 가르쳐 줄 수 있는 기술 알리기",
+        OPTION_HINTS_NOTE = "소환수를 부르거나 길들이면 당신보다 높은 레벨로 가진 기술을 대화창에 알려 줍니다. "
+            .. "/pal hints on 및 off 와 같습니다.",
+        OPTION_HISTORY = "이 캐릭터가 배운 기술",
+        OPTION_HISTORY_NOTE = "%d개 배움, 최근 것부터. /pal history 와 같습니다.",
         OPTION_DEBUG = "디버그 추적",
         OPTION_DEBUG_NOTE = "애드온이 본 모든 습득과 그 판단을 대화창에 표시합니다. /pal debug 와 같습니다.",
         OPTION_TEST = "알림 보기",
