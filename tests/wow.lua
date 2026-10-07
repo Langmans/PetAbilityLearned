@@ -35,7 +35,7 @@ function SpellLink(id, name)
     return ("|cff71d5ff|Hspell:%d:0|h[%s]|h|r"):format(id, name)
 end
 
----@param opts {locale: string?, class: string?, savedDB: table?, savedDBPC: table?, oldSpellAPI: boolean?, oldSpellBookAPI: boolean?, noPetSpellAPI: boolean?, noLearnStrings: boolean?, noMasks: boolean?, noTextureAPI: boolean?, noPortraitAPI: boolean?, oldCheckButton: boolean?, knownEvents: table?, metadata: table?, noAddOnsAPI: boolean?}?
+---@param opts {locale: string?, class: string?, savedDB: table?, savedDBPC: table?, oldSpellAPI: boolean?, oldSpellBookAPI: boolean?, noPetSpellAPI: boolean?, noLearnStrings: boolean?, noMasks: boolean?, noTextureAPI: boolean?, noPortraitAPI: boolean?, oldCheckButton: boolean?, knownEvents: table?, metadata: table?, noAddOnsAPI: boolean?, oldTrainingPointsAPI: boolean?, noTrainingPointsAPI: boolean?, noCraftAPI: boolean?}?
 function NewClient(opts)
     opts = opts or {}
     -- opts.locale: the client's language. Spell names and the learn line exist here for enUS and
@@ -56,6 +56,7 @@ function NewClient(opts)
         pet = {
             name = "Nightstalker",
             familyID = 2,
+            points = { 20, 5 },
             spells = {
                 { id = 16828, name = spells[16828][1], rank = spells[16828][2] },
                 { id = 2649, name = spells[2649][1], rank = spells[2649][2] },
@@ -360,6 +361,41 @@ function NewClient(opts)
             client.opened[#client.opened + 1] = id
         end,
     }
+
+    -- client.screenshots: how many screenshots were taken.
+    client.screenshots = 0
+    function Screenshot()
+        client.screenshots = client.screenshots + 1
+    end
+
+    -- client.pet.points: { total, used } training points, read through C_PetInfo (the global on
+    -- older clients with opts.oldTrainingPointsAPI, nothing with opts.noTrainingPointsAPI).
+    local function trainingPoints()
+        local points = client.pet and client.pet.points or { 0, 0 }
+        return points[1], points[2]
+    end
+    C_PetInfo = nil
+    GetPetTrainingPoints = nil
+    if opts.oldTrainingPointsAPI then
+        GetPetTrainingPoints = trainingPoints
+    elseif not opts.noTrainingPointsAPI then
+        C_PetInfo = { GetPetTrainingPoints = trainingPoints }
+    end
+
+    -- client.crafts: the rows of the Beast Training window, each { name, rank, kind }; absent
+    -- API with opts.noCraftAPI.
+    client.crafts = {}
+    if opts.noCraftAPI then
+        GetNumCrafts, GetCraftInfo = nil, nil
+    else
+        function GetNumCrafts()
+            return #client.crafts
+        end
+        function GetCraftInfo(index)
+            local row = client.crafts[index]
+            return row[1], row[2], row[3]
+        end
+    end
 
     -- client.zone: where the player is.
     client.zone = "Darkshore"

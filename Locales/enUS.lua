@@ -15,9 +15,17 @@ ns.Locales.enUS = {
         SPLASH_FROM_PET = "%s has taught you %s.",
         SPLASH_TEACH = "Teach it to your pet from the Beast Training window.",
 
-        -- /pal. STATUS: duration in seconds, scale, sound (a SOUND_NAME_* or STATUS_OFF), debug
-        -- on/off, the command list.
-        STATUS = "Splash for %d s at scale %.2f, sound %s, debug %s. Commands: %s",
+        -- The pet's name, its free training points.
+        SPLASH_POINTS = "%s has %d training points free.",
+
+        -- Said in chat when a pet is summoned or tamed. The pet's name, then a list like
+        -- "Claw (Rank 3), Dash (Rank 1)".
+        HINT_TEACHES = "%s can teach you: %s.",
+        HINT_OPEN_TRAINING = "Open Beast Training once so the addon knows your ranks.",
+
+        -- /pal. STATUS: duration in seconds, scale, sound (a SOUND_NAME_* or STATUS_OFF), then
+        -- screenshot, pet hints and debug on/off, the command list.
+        STATUS = "Splash for %d s at scale %.2f, sound %s, screenshot %s, pet hints %s, debug %s. Commands: %s",
         STATUS_ON = "on",
         STATUS_OFF = "off",
         SOUND_NAME_FAMILY = "pet family",
@@ -37,6 +45,10 @@ ns.Locales.enUS = {
         SOUND_LEVELUP = "Sound: the level-up sound.",
         SOUND_OFF = "Sound off.",
         POSITION_RESET = "Splash position reset.",
+        SCREENSHOT_ON = "A screenshot is taken of each splash.",
+        SCREENSHOT_OFF = "No screenshots.",
+        HINTS_ON = "Summoning or taming a pet says what it can still teach you.",
+        HINTS_OFF = "No hints about new pets.",
         -- /pal history.
         HISTORY_EMPTY = "This character has not learned a pet ability since the addon was installed.",
         -- How many are listed, how many there are.

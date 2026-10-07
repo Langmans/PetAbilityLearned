@@ -18,6 +18,7 @@ Locales\ruRU.lua
 Locale.lua
 Core.lua
 History.lua
+Hints.lua
 Splash.lua
 Detect.lua
 Commands.lua

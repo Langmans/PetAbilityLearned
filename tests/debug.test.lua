@@ -16,7 +16,7 @@ test("/pal debug switches the trace and is saved", function()
 end)
 
 test("without debug nothing is traced", function()
-    local client = NewClient():login()
+    local client = NewClient({ savedDB = { hints = false } }):login()
     client:chat(client:learnLine("Claw (Rank 2)"))
     client:advance(0.3)
     eq(#client.printed, 0)

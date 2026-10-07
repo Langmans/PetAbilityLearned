@@ -19,6 +19,8 @@ local MAX_HISTORY = 200
 ---@class CharacterData
 ---@field history HistoryEntry[] oldest first, at most MAX_HISTORY
 ---@field known table<string, number> ability name -> highest rank number known
+---@field craftRead boolean? whether the Beast Training window has been read: then `known` is
+---complete, and an ability missing from it is one this character does not have
 
 ---The character's data: empty until LoadCharacterData runs on ADDON_LOADED.
 ---@type CharacterData
@@ -38,11 +40,11 @@ end
 ---@return HistoryEntry?
 local function cleanEntry(saved)
     if type(saved) ~= "table" then return nil end
-    ---@type GameValue, GameValue
-    local name, t = saved.name, saved.t
+    ---@type table<string, GameValue>
+    local fields = saved
+    local name, t = fields["name"], fields["t"]
     if type(name) ~= "string" or type(t) ~= "number" then return nil end
-    ---@type GameValue, GameValue, GameValue, GameValue
-    local rank, pet, familyID, zone = saved.rank, saved.pet, saved.familyID, saved.zone
+    local rank, pet, familyID, zone = fields["rank"], fields["pet"], fields["familyID"], fields["zone"]
     return {
         name = name,
         t = t,
@@ -70,6 +72,7 @@ function ns.LoadCharacterData()
         if type(name) == "string" and type(rank) == "number" then known[name] = rank end
     end
     saved.history, saved.known = history, known
+    saved.craftRead = saved.craftRead == true or nil
     ---@type CharacterData
     ns.char = saved
 end
@@ -88,6 +91,18 @@ end
 function ns.MarkKnown(name, rank)
     local known = ns.char.known
     if rank > (known[name] or 0) then known[name] = rank end
+end
+
+---One history line: "2026-10-07 14:03  Claw (Rank 2), from Fluffy, Darkshore".
+---@param entry HistoryEntry
+---@return string
+function ns.FormatHistoryEntry(entry)
+    ---@type string
+    local line = date("%Y-%m-%d %H:%M", entry.t) .. "  " .. entry.name
+    if entry.rank then line = line .. " (" .. entry.rank .. ")" end
+    if entry.pet then line = line .. ", " .. ns.Format("HISTORY_FROM", entry.pet) end
+    if entry.zone then line = line .. ", " .. entry.zone end
+    return line
 end
 
 ---Adds a learn to the history and to what is known.

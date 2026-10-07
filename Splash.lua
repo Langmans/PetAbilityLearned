@@ -3,7 +3,7 @@ local _, ns = ...
 -- The splash follows GnomeLevelUp's look: a black panel whose edges fade out, a round icon in a
 -- gold ring, and text with a soft glow made of offset copies behind it.
 
-local FRAME_WIDTH, FRAME_HEIGHT = 440, 236
+local FRAME_WIDTH, FRAME_HEIGHT = 440, 254
 local ICON_SIZE = 64
 local RING_SIZE = ICON_SIZE + 6
 local PORTRAIT_SIZE = 34
@@ -202,8 +202,13 @@ local subText = GlowText("GameFontHighlightSmall", 1.5)
 subText.main:SetPoint("TOP", rankText.main, "BOTTOM", 0, -12)
 subText:Set("SetTextColor", 0.8, 0.8, 0.8)
 
+local pointsText = GlowText("GameFontHighlightSmall", 1.5)
+pointsText.main:SetPoint("TOP", subText.main, "BOTTOM", 0, -4)
+pointsText:Set("SetTextColor", HUNTER_GREEN[1], HUNTER_GREEN[2], HUNTER_GREEN[3])
+
 -- The visible parts as fields, the way a template's parentKeys would be.
 frame.Icon, frame.Name, frame.Rank, frame.Source = icon, spellName.main, rankText.main, subText.main
+frame.Points = pointsText.main
 frame.Portrait = portrait
 
 -- Intro and outro run on one OnUpdate clock so a new splash can restart them cleanly.
@@ -234,11 +239,30 @@ end
 ---Seconds since the splash was shown, when it starts to fade, and when the fade began.
 ---@type number, number, number?
 local clock, fadeAt, fadeStart = 0, 0, nil
+-- With the screenshot setting on, one screenshot per splash once it has faded in.
+local SCREENSHOT_AT = CONTENT_DELAY + CONTENT_FADE + 0.2
+local screenshotTaken = false
+
+-- Splashes waiting while another is up; each shows when the one before it is gone.
+---@type SplashInfo[]
+local queue = {}
+---@type fun(info: SplashInfo)
+local Display
+
+---Shows the next queued splash, if any; called whenever one is gone.
+local function ShowNext()
+    local info = table.remove(queue, 1)
+    if info then Display(info) end
+end
 
 ---@param _ Frame the splash
 ---@param elapsed number seconds since the previous frame
 local function Animate(_, elapsed)
     clock = clock + elapsed
+    if not screenshotTaken and clock >= SCREENSHOT_AT then
+        screenshotTaken = true
+        if ns.db.screenshot then Screenshot() end
+    end
     bg:SetAlpha(EaseOut(Progress(clock, 0, BG_FADE)))
     content:SetAlpha(EaseOut(Progress(clock, CONTENT_DELAY, CONTENT_FADE)))
     local pop = EaseOutBack(Progress(clock, CONTENT_DELAY, ICON_POP))
@@ -257,14 +281,18 @@ local function Animate(_, elapsed)
     if fadeStart then
         local p = Progress(clock, fadeStart, FADE_OUT)
         frame:SetAlpha(1 - p)
-        if p >= 1 then frame:Hide() end
+        if p >= 1 then
+            frame:Hide()
+            ShowNext()
+        end
     end
 end
 
----Closes the splash at once, without the fade.
+---Closes the splash at once, without the fade; the next queued one, if any, follows.
 function ns.HideSplash()
     frame:SetScript("OnUpdate", nil)
     frame:Hide()
+    ShowNext()
 end
 
 frame:SetScript("OnMouseUp", function(
@@ -282,6 +310,7 @@ end)
 ---@field source string? the line under the rank, such as where it came from
 ---@field petPortrait boolean? show the active pet's portrait as a badge on the icon
 ---@field familyID number? the CreatureFamily ID of the pet that taught it, for its sound
+---@field points string? a line under the source, the teaching pet's free training points
 
 ---The sound for a splash, as the sound setting asks.
 ---@param familyID number?
@@ -296,13 +325,15 @@ local function PlaySplashSound(familyID)
     end
 end
 
+---Fills the splash with `info` and starts it.
 ---@param info SplashInfo
-function ns.ShowSplash(info)
+function Display(info)
     local db = ns.db
     icon:SetTexture(info.icon or FALLBACK_ICON)
     spellName:Set("SetText", info.name or "?")
     rankText:Set("SetText", info.rank or "")
     subText:Set("SetText", info.source or ns.L.SPLASH_TEACH)
+    pointsText:Set("SetText", info.points or "")
 
     -- The portrait is drawn from the pet as it is right now, the pet the ability came from.
     local withPortrait = info.petPortrait and UnitExists("pet") and SetPortraitTexture ~= nil
@@ -315,10 +346,20 @@ function ns.ShowSplash(info)
     frame:SetAlpha(1)
     bg:SetAlpha(0)
     content:SetAlpha(0)
-    clock, fadeStart = 0, nil
+    clock, fadeStart, screenshotTaken = 0, nil, false
     fadeAt = db.duration
     frame:SetScript("OnUpdate", Animate)
     frame:Show()
 
     PlaySplashSound(info.familyID)
+end
+
+---Shows a splash now, or after the one that is up.
+---@param info SplashInfo
+function ns.ShowSplash(info)
+    if frame:IsShown() then
+        queue[#queue + 1] = info
+    else
+        Display(info)
+    end
 end

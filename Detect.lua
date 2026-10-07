@@ -58,6 +58,7 @@ local function IsPetAbilityName(name)
     end
     return petAbilityNames[name] == true
 end
+ns.IsWildAbility = IsPetAbilityName
 
 ---A game format string such as "You have learned a new ability: %s." as a Lua pattern capturing %s.
 ---@param fmt string?
@@ -131,7 +132,9 @@ local function Flush()
     local teacher = petSpell and UnitExists("pet") and UnitName("pet") or nil
     local familyID = petSpell and ns.PetFamilyID() or nil
     local rank = info.rank or (petSpell and petSpell.rank)
+    local freePoints = teacher and ns.PetFreeTrainingPoints()
     ns.ShowSplash({
+        points = freePoints and ns.Format("SPLASH_POINTS", teacher, freePoints) or nil,
         name = info.name,
         rank = rank,
         icon = info.icon or (petSpell and petSpell.icon) or SpellTextureByName(info.name),
@@ -254,6 +257,9 @@ function frame:ADDON_LOADED(name)
         "LEARNED_SPELL_IN_SKILL_LINE",
         "TRAINER_SHOW",
         "TRAINER_CLOSED",
+        "UNIT_PET",
+        "CRAFT_SHOW",
+        "CRAFT_UPDATE",
     }) do
         pcall(self.RegisterEvent, self, event) -- not every client has every event
     end
@@ -263,11 +269,28 @@ function frame:PLAYER_LOGOUT()
     ns.StripDefaults()
 end
 
--- The spells replayed at login arrive in the next seconds; learns count after that.
+-- The spells replayed at login arrive in the next seconds; learns count after that. A pet
+-- already out at login gets its hint then too.
 function frame:PLAYER_LOGIN()
     C_Timer.After(5, function()
         ready = true
+        ns.CheckPetHints()
     end)
+end
+
+-- A pet summoned, tamed or dismissed. Its spellbook fills in just after, hence the wait.
+---@param unit string
+function frame:UNIT_PET(unit)
+    if unit ~= "player" or not ready then return end
+    C_Timer.After(1, ns.CheckPetHints)
+end
+
+function frame:CRAFT_SHOW()
+    ns.ReadBeastTraining()
+end
+
+function frame:CRAFT_UPDATE()
+    ns.ReadBeastTraining()
 end
 
 ---@param msg string

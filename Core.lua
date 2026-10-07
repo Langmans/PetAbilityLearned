@@ -15,6 +15,8 @@ local _, ns = ...
 ---@field duration number whole seconds the splash stays before it fades, from 1
 ---@field scale number from 0.3 to 3
 ---@field sound SoundMode
+---@field screenshot boolean take a screenshot of each splash
+---@field hints boolean say what a new pet can still teach
 ---@field debug boolean
 ---@field pos [string, string, number, number]? point, relativePoint, x, y of a dragged splash
 
@@ -40,6 +42,8 @@ ns.DEFAULTS = {
     duration = 6, -- /pal duration <seconds>
     scale = 1, -- /pal scale <0.3-3>
     sound = "family", -- /pal sound family|levelup|off
+    screenshot = false, -- /pal screenshot on|off
+    hints = true, -- /pal hints on|off
     debug = false, -- /pal debug
 }
 
@@ -93,6 +97,19 @@ function ns.PetFamilyID()
     if not UnitExists("pet") then return nil end
     local _, familyID = UnitCreatureFamily("pet")
     return tonumber(familyID)
+end
+
+---The active pet's free training points (total minus used), or nil without a pet or the API.
+---C_PetInfo has them on Forever, the global on older clients.
+---@return number?
+function ns.PetFreeTrainingPoints()
+    if not UnitExists("pet") then return nil end
+    ---@type (fun(): number, number)?
+    local get = (C_PetInfo and C_PetInfo.GetPetTrainingPoints) or GetPetTrainingPoints
+    if not get then return nil end
+    local ok, total, used = pcall(get)
+    if not ok or type(total) ~= "number" then return nil end
+    return math.max(0, total - (tonumber(used) or 0))
 end
 
 ---The spells in the active pet's spellbook, keyed by name, to fill in the rank and icon of an

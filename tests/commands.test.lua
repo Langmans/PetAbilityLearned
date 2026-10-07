@@ -2,7 +2,12 @@
 
 test("/pal without a known command prints the status line with the commands", function()
     local client = NewClient():login():slash("")
-    ok(client:printedContains("Splash for 6 s at scale 1.00, sound pet family, debug off. Commands: /pal test [name]"))
+    ok(
+        client:printedContains(
+            "Splash for 6 s at scale 1.00, sound pet family, screenshot off, pet hints on, debug off."
+                .. " Commands: /pal test [name]"
+        )
+    )
     client.printed = {}
     client:slash("bogus")
     ok(client:printedContains("/pal sound family|levelup|off"))
@@ -18,9 +23,11 @@ test("/pal test shows the splash only, for Claw or a named spell", function()
     local client = NewClient():login():slash("test")
     eq(client:splashName(), "Claw")
     eq(client.splash.Rank.text, "Rank 2", "the pet's rank")
+    client.ns.HideSplash()
     client:slash("test Growl")
     eq(client:splashName(), "Growl", "test shows anything")
     eq(client.splash.Rank.text, "Rank 1")
+    client.ns.HideSplash()
     client:slash("TEST Demoralizing Screech")
     eq(client:splashName(), "Demoralizing Screech", "the name keeps its case and spaces")
 end)
@@ -53,12 +60,14 @@ test("/pal sim runs a learn line through the detection, even at a trainer", func
     ok(client:printedContains("Simulating: You have learned a new ability: Claw (Rank 2)."))
     client:advance(0.3)
     eq(client:splashName(), "Claw")
+    client.ns.HideSplash()
     client:slash("sim")
     client:advance(0.3)
     eq(#client.sounds, 2, "a repeat is not swallowed as a duplicate")
+    client.ns.HideSplash()
     client:chat(client:learnLine("Bite (Rank 1)"))
     client:advance(0.3)
-    eq(client:splashName(), "Claw", "the guards are back afterwards")
+    eq(client:splashName(), nil, "the guards are back afterwards")
 end)
 
 test("/pal sim of a trainer ability says it is ignored", function()

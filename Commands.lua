@@ -16,6 +16,8 @@ local COMMAND_LIST = table.concat({
     "/pal duration <seconds>",
     "/pal scale <0.3-3>",
     "/pal sound family|levelup|off",
+    "/pal screenshot on|off",
+    "/pal hints on|off",
     "/pal reset",
     "/pal config",
     "/pal debug",
@@ -27,6 +29,22 @@ local COMMAND_LIST = table.concat({
 local function firstWord(rest)
     local lowered = rest:lower()
     return lowered:match("^%S*") or ""
+end
+
+---"on" -> true, "off" -> false, anything else nil.
+---@param rest string
+---@return boolean?
+local function onOff(rest)
+    local word = firstWord(rest)
+    if word == "on" then return true end
+    if word == "off" then return false end
+    return nil
+end
+
+---@param on boolean
+---@return string
+local function onOffName(on)
+    return on and L.STATUS_ON or L.STATUS_OFF
 end
 
 -- How each sound mode is named in the status line.
@@ -52,7 +70,9 @@ local function status()
             db.duration,
             db.scale,
             SOUND_NAMES[db.sound],
-            db.debug and L.STATUS_ON or L.STATUS_OFF,
+            onOffName(db.screenshot),
+            onOffName(db.hints),
+            onOffName(db.debug),
             COMMAND_LIST
         )
     )
@@ -125,13 +145,26 @@ function Commands.history(rest)
     local first = math.max(1, #history - count + 1)
     Print(ns.Format("HISTORY_TITLE", #history - first + 1, #history))
     for i = first, #history do
-        local entry = history[i]
-        local line = date("%Y-%m-%d %H:%M", entry.t) .. "  " .. entry.name
-        if entry.rank then line = line .. " (" .. entry.rank .. ")" end
-        if entry.pet then line = line .. ", " .. ns.Format("HISTORY_FROM", entry.pet) end
-        if entry.zone then line = line .. ", " .. entry.zone end
-        Print(line)
+        Print(ns.FormatHistoryEntry(history[i]))
     end
+end
+
+---/pal screenshot on|off: a screenshot of each splash, off by default.
+function Commands.screenshot(rest)
+    local on = onOff(rest)
+    if on == nil then return status() end
+    local db = ns.db
+    db.screenshot = on
+    Print(on and L.SCREENSHOT_ON or L.SCREENSHOT_OFF)
+end
+
+---/pal hints on|off: say what a new pet can still teach you.
+function Commands.hints(rest)
+    local on = onOff(rest)
+    if on == nil then return status() end
+    local db = ns.db
+    db.hints = on
+    Print(on and L.HINTS_ON or L.HINTS_OFF)
 end
 
 function Commands.reset()
