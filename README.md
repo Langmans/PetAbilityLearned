@@ -84,11 +84,14 @@ The same settings are chat commands too (`/petabilitylearned` works as well):
 
 - `/pal` shows the current settings, plus the list of commands.
 - `/pal config` (or `/pal options`) opens the panel.
-- `/pal test [name]` shows the splash for Claw, or for the ability you name.
+- `/pal test [name]` shows the splash for the ability you name, or without a
+  name for one your pet out has (Bite for a boar; Claw without a pet).
   Nothing else happens; it is only a look at the splash.
-- `/pal sim [name]` pretends the game just said you learned Claw rank 2 (or
-  the ability you name), and runs that through the real detection. It says
-  so when the name is not an ability learned in the wild.
+- `/pal sim [name]` pretends the game just said you learned that ability, at
+  your pet's rank, and runs that through the real detection, sound and all.
+  It says so when the name is not an ability learned in the wild. Name an
+  ability your pet does not have (Claw with a boar) and it counts as learned
+  from another pet: no portrait, and the level-up sound.
 - `/pal duration <seconds>` sets how long the splash stays (default 6).
 - `/pal scale <0.3-3>` sets its size (default 1).
 - `/pal sound family` plays the pet family's call (the default; `/pal sound

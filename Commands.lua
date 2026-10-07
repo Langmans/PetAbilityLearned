@@ -78,14 +78,29 @@ local function status()
     )
 end
 
----The ability a test uses, with the rank and icon the active pet has for it. Without a pet the
----rank is the client's own text for Claw rank 2, so the line reads right in any language.
----@param name string what was typed; empty for Claw
+---The first ability learned in the wild that the pet out has (by name), so a test without a
+---name is one this pet could have taught: Bite or Charge for a boar, where Claw would not count
+---as coming from it. Nil without such a pet.
+---@return string?
+local function PetWildAbility()
+    ---@type string[]
+    local names = {}
+    for name in pairs(ns.PetSpells()) do
+        if ns.IsWildAbility(name) then names[#names + 1] = name end
+    end
+    table.sort(names)
+    return names[1]
+end
+
+---The ability a test uses, with the rank and icon the active pet has for it. Without a name it
+---is one of the pet's own abilities, or Claw. Without a pet the rank is the client's own text
+---for Claw rank 2, so the line reads right in any language.
+---@param name string what was typed; empty for the default
 ---@return string name
 ---@return string rank
 ---@return (number|string)? icon
 local function testSpell(name)
-    if name == "" then name = ns.SpellInfo(CLAW) or L.TEST_SPELL end
+    if name == "" then name = PetWildAbility() or ns.SpellInfo(CLAW) or L.TEST_SPELL end
     local petSpell = ns.PetSpells()[name]
     local _, rank2, icon = ns.SpellInfo(CLAW_RANK_2)
     return name, (petSpell and petSpell.rank) or rank2 or L.TEST_RANK, (petSpell and petSpell.icon) or icon

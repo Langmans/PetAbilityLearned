@@ -70,6 +70,34 @@ test("/pal sim runs a learn line through the detection, even at a trainer", func
     eq(client:splashName(), nil, "the guards are back afterwards")
 end)
 
+test("without a name, test and sim use an ability the pet out has, so a boar gets its own sound", function()
+    local client = NewClient():login()
+    client.pet = {
+        name = "Kaldor",
+        familyID = 5,
+        spells = {
+            { id = 2649, name = "Growl", rank = "Rank 1" },
+            { id = 17253, name = "Bite", rank = "Rank 1" },
+        },
+    }
+    client:slash("sim")
+    ok(client:printedContains("Simulating: You have learned a new ability: Bite (Rank 1)."))
+    client:advance(0.3)
+    eq(client:splashName(), "Bite")
+    eq(client.sounds[1].file, 545134, "the boar's aggro sound")
+    client.ns.HideSplash()
+    client:slash("sim Claw")
+    client:advance(0.3)
+    eq(client.sounds[2].id, 888, "Claw cannot have come from a boar")
+end)
+
+test("a pet with only trainer abilities, or none, leaves the default at Claw", function()
+    local client = NewClient():login()
+    client.pet.spells = { { id = 2649, name = "Growl", rank = "Rank 1" } }
+    client:slash("test")
+    eq(client:splashName(), "Claw")
+end)
+
 test("/pal sim of a trainer ability says it is ignored", function()
     local client = NewClient():login():slash("sim Growl")
     ok(client:printedContains("Growl is not a pet ability learned in the wild"))
