@@ -6,12 +6,14 @@ a pet ability from a tamed beast:
 > **New Pet Ability Learned!**
 > Claw — Rank 2
 > Fluffy has taught you Claw.
+> Fluffy has 15 training points free.
 
 Tame a beast that knows a higher rank than you do (a Nightstalker with Claw
 rank 2 while you only have rank 1, say), fight with it, and you learn that
 rank after a while. The game only tells you with one line in the chat, easy
 to miss in a fight. This addon makes it impossible to miss, so you know when
-you can abandon the beast and tame the next one.
+you can abandon the beast and tame the next one. And when you summon or tame
+a pet, it tells you what that pet can still teach you.
 
 The look follows GnomeLevelUp's level-up screen: a dark panel that fades out
 at the edges, the ability's icon in a gold ring, glowing text.
@@ -20,7 +22,8 @@ at the edges, the ability's icon in a gold ring, glowing text.
 
 - The ability's icon, name and rank, and which pet taught it to you: its
   portrait as a badge on the icon, and "Fluffy has taught you Claw." under
-  it, with the name your pet has now.
+  it, with the name your pet has now, and how many training points it has
+  free to be taught the new rank.
 - Only abilities you learn from beasts in the wild: Bite, Charge, Claw, Cower,
   Dash, Demoralizing Screech, Dive, Furious Howl, Lightning Breath, Prowl,
   Scorpid Poison, Shell Shield, Thunderstomp, and the family abilities new in
@@ -30,7 +33,15 @@ at the edges, the ability's icon in a gold ring, glowing text.
   resistances), nor anything learned while a trainer window is open, nor
   your other spells and recipes.
 - The splash stays for 6 seconds, then fades. Hover over it to keep it up,
-  right-click to close it, drag it to move it.
+  right-click to close it, drag it to move it. Learn two at once and they
+  show one after the other.
+- When you summon or tame a pet, chat says what it can still teach you:
+  "Fluffy can teach you: Claw (Rank 3), Dash (Rank 1)." The addon knows your
+  ranks from what it saw you learn and from the Beast Training window, so
+  open that once after installing.
+- Everything you learn is kept per character, with the pet, place and time:
+  see it in the panel or with `/pal history`.
+- If you like, a screenshot of each splash (off by default).
 - It plays the call of the teaching pet's family: a cat growls, a wolf
   howls. Crocolisks, scorpids and bats get the level-up sound, as does a
   learn when the pet is no longer out.
@@ -57,13 +68,19 @@ Made for WoW: Forever (1.60).
 Open the panel with `/pal config`, or through Esc > Options > AddOns > Pet
 Ability Learned. It shows the version and website, and has:
 
+- **Splash stays for** and **Splash size**: sliders for how long the splash
+  stays and how big it is.
+- **Sound**: the call of the pet's family, the level-up sound, or none.
+- **Take a screenshot of each splash** (off by default).
+- **Say what a new pet can teach** (on by default).
 - **Debug trace**: print in chat what the addon sees and decides (see
   [Reporting a problem](#reporting-a-problem)).
 - **Show the splash** and **Simulate a learn**: the same as `/pal test` and
   `/pal sim` below.
+- **Learned on this character**: the history, newest first.
 
-All settings are saved for the whole account. The rest are chat commands
-(`/petabilitylearned` works too):
+The settings are saved for the whole account, the history per character.
+The same settings are chat commands too (`/petabilitylearned` works as well):
 
 - `/pal` shows the current settings, plus the list of commands.
 - `/pal config` (or `/pal options`) opens the panel.
@@ -77,6 +94,10 @@ All settings are saved for the whole account. The rest are chat commands
 - `/pal sound family` plays the pet family's call (the default; `/pal sound
   on` does the same), `/pal sound levelup` always the level-up sound, and
   `/pal sound off` nothing.
+- `/pal screenshot on` and `/pal screenshot off` switch the screenshot.
+- `/pal hints on` and `/pal hints off` switch the hints about new pets.
+- `/pal history [count]` lists what this character learned (the last 10,
+  or `count`).
 - `/pal reset` puts the splash back in its standard spot.
 - `/pal debug` switches the debug trace on or off.
 
@@ -124,29 +145,44 @@ In `.toc` order; all share the addon namespace `ns`.
 - `Core.lua` — the saved settings (`ns.DEFAULTS`, `ns.db`,
   `ns.LoadSettings`, `ns.StripDefaults`), `ns.Print`, `ns.Debug`, and the
   lookups that differ between clients: `ns.SpellInfo` (name, rank, icon by
-  spell ID), `ns.PetSpells` (the active pet's spellbook) and `ns.PetFamilyID`.
+  spell ID), `ns.PetSpells` (the active pet's spellbook), `ns.PetFamilyID` and
+  `ns.PetFreeTrainingPoints`.
+- `History.lua` — what this character learned (`ns.char`, saved per
+  character): `ns.RecordLearn`, `ns.KnownRank`, `ns.MarkKnown`,
+  `ns.RankNumber`, `ns.FormatHistoryEntry`.
+- `Hints.lua` — what a pet can still teach: `ns.ReadBeastTraining` (the
+  hunter's ranks from the Beast Training window) and `ns.CheckPetHints`.
 - `Splash.lua` — the splash frame (`ns.ShowSplash`, `ns.HideSplash`): its
   background, the glowing texts, the pet's portrait badge, the animation on
-  one `OnUpdate` clock, and the sound (`FAMILY_SOUNDS`).
+  one `OnUpdate` clock, the queue, the screenshot, and the sound
+  (`FAMILY_SOUNDS`).
 - `Detect.lua` — the event frame (one method per event) and the detection:
   which line or event means a learn, whether it is an ability learned in the
   wild, merging, and `ns.SimulateChat` for `/pal sim`.
 - `Commands.lua` — `/pal`: one function per subcommand in a `Commands` table,
   looked up by the slash handler like the event frame looks up its event
   methods; anything unknown shows the status line.
-- `Options.lua` — the panel in the game's settings (`ns.OpenOptions`):
-  version, author, license and website from the .toc (`GetAddOnMetadata`),
-  the debug checkbox, the test and sim buttons.
+- `Options.lua` — the panel in the game's settings (`ns.OpenOptions`), one
+  scroll frame holding the version, author, license and website from the .toc
+  (`GetAddOnMetadata`), the settings (sliders, sound radio buttons,
+  checkboxes, the test and sim buttons), and the history list.
 
 The settings are saved account-wide in `PetAbilityLearnedDB`: `duration`
 (whole seconds, from 1), `scale` (0.3 to 3), `sound` (`"family"`,
-`"levelup"` or `"off"`), `debug` (a boolean), and `pos`, the dragged spot as `{ point, relativePoint, x, y }`. Only values
+`"levelup"` or `"off"`), `screenshot`, `hints` and `debug` (booleans), and
+`pos`, the dragged spot as `{ point, relativePoint, x, y }`. Only values
 that differ from their default are kept: `ns.db` reads the rest from the
 defaults through a metatable, a broken value is dropped on load so its
 default shows through, numbers are put back in range, and `ns.StripDefaults`
 removes values equal to their default on `PLAYER_LOGOUT`. A default changed
 in a later version so reaches everyone who never changed it. Until
 `ADDON_LOADED`, `ns.db` is the defaults table itself.
+
+Per character, `PetAbilityLearnedDBPC` holds `history` (the last 200 learns,
+oldest first, each with `name`, `rank`, `pet`, `familyID`, `zone` and `t`, the
+server time), `known` (ability name → the highest rank number known) and
+`craftRead` (true once the Beast Training window was read). Broken entries are
+dropped on load.
 
 ### How it works
 
@@ -183,7 +219,22 @@ in a later version so reaches everyone who never changed it. Until
   it to the FileDataID of that family's aggro sound for `PlaySoundFile`,
   found in the wago.tools community listfile. Families without one
   (Crocolisk, Scorpid, Bat), and a learn without its pet, get the level-up
-  sound (SoundKit 888).
+  sound (SoundKit 888). Its free training points come from
+  `C_PetInfo.GetPetTrainingPoints` (total minus used).
+- A splash asked for while another is up waits in a queue and shows when the
+  one before it is gone (faded or right-clicked). With `screenshot` on,
+  `Screenshot()` runs once per splash, 0.6 s in, when it has faded in.
+- Every learn shown goes into the history, except those from `/pal sim`. Its
+  rank number (the digits in the rank text, so any language) also raises
+  `known` for that ability.
+- Hints: on `UNIT_PET` for the player (a second later, when the pet's
+  spellbook is filled) and once after login, the pet's spells that are
+  abilities learned in the wild are compared with `known`; those at a higher
+  rank are named in chat. The same list is not repeated for the same pet. On
+  `CRAFT_SHOW` and `CRAFT_UPDATE`, every row of the Beast Training window
+  (`GetNumCrafts`, `GetCraftInfo`) that is not a header raises `known`, and
+  `craftRead` is set: until then an ability missing from `known` may just not
+  have been seen, so the hint asks to open the window once.
 
 ### Localization
 
@@ -214,6 +265,14 @@ Needs Node.js. `npm install` once, then:
   (taken from its VS Code extension; skipped if that is not installed).
 - `npm run format` — formats all Lua with StyLua.
 - `npm run check` — lint, then tests.
+
+Releases: pushing a tag runs `.github/workflows/release.yml`, which runs
+`npm run check` and then BigWigsMods/packager. The packager builds the zip
+(leaving out what `.pkgmeta` lists) and attaches it to a GitHub release; it
+uploads to CurseForge as well once the `.toc` has an `## X-Curse-Project-ID`
+and the repository a `CF_API_KEY` secret. The release notes are the
+`CHANGELOG.md` in the repository, so add a section there (and set
+`## Version:` in the `.toc`) before tagging.
 
 To play with it while working on it, give the client's AddOns folder a git
 worktree of its own on a local branch, so the game loads a clean checkout
