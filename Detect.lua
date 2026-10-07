@@ -101,9 +101,12 @@ local MERGE_WINDOW = 0.3
 ---@field rank string?
 ---@field icon (number|string)?
 ---@field petSpell PetSpell? the active pet's spell of that name
+---@field simulated boolean? from /pal sim: shown, but not kept in the history
 
 ---@type PendingLearn?
 local pending
+-- True while /pal sim feeds its line through the detection.
+local simulating = false
 ---@type table<string, number>
 local lastShown = {} -- name -> GetTime() of the last splash, against late duplicates
 
@@ -123,18 +126,27 @@ local function Flush()
     lastShown[info.name] = GetTime()
     ns.Debug(("splash: %s, rank %s"):format(info.name, tostring(info.rank)))
 
+    -- When the pet out has the ability, it is the one that taught it.
     local petSpell = info.petSpell
-    ---@type string?
-    local source
-    if petSpell and UnitExists("pet") then source = ns.Format("SPLASH_FROM_PET", UnitName("pet"), info.name) end
+    local teacher = petSpell and UnitExists("pet") and UnitName("pet") or nil
+    local familyID = petSpell and ns.PetFamilyID() or nil
+    local rank = info.rank or (petSpell and petSpell.rank)
     ns.ShowSplash({
         name = info.name,
-        rank = info.rank or (petSpell and petSpell.rank),
+        rank = rank,
         icon = info.icon or (petSpell and petSpell.icon) or SpellTextureByName(info.name),
-        source = source,
-        -- Only when the pet out has the ability: then it is the one it came from.
+        source = teacher and ns.Format("SPLASH_FROM_PET", teacher, info.name) or nil,
         petPortrait = petSpell ~= nil,
-        familyID = petSpell and ns.PetFamilyID() or nil,
+        familyID = familyID,
+    })
+    if info.simulated then return end
+    ns.RecordLearn({
+        name = info.name,
+        rank = rank,
+        pet = teacher,
+        familyID = familyID,
+        zone = GetZoneText(),
+        t = GetServerTime(),
     })
 end
 
@@ -181,7 +193,7 @@ local function Learned(name, rank, spellID)
     local petSpell = ns.PetSpells()[name]
 
     if pending then Flush() end
-    pending = { name = name, rank = rank or idRank, icon = idIcon, petSpell = petSpell }
+    pending = { name = name, rank = rank or idRank, icon = idIcon, petSpell = petSpell, simulated = simulating }
     C_Timer.After(MERGE_WINDOW, Flush)
     return true
 end
@@ -229,6 +241,7 @@ function frame:ADDON_LOADED(name)
     if name ~= ADDON_NAME then return end
     self:UnregisterEvent("ADDON_LOADED")
     ns.LoadSettings()
+    ns.LoadCharacterData()
     self:RegisterEvent("PLAYER_LOGOUT")
     local _, class = UnitClass("player")
     ---@type boolean
@@ -292,14 +305,15 @@ end)
 frame:RegisterEvent("ADDON_LOADED")
 
 ---For /pal sim: feed a system chat line through the real detection, as if it had just arrived.
----The login and trainer guards and the duplicate window are lifted for it, so it works anytime.
+---The login and trainer guards and the duplicate window are lifted for it, so it works anytime;
+---what it shows is not kept in the history.
 ---@param msg string
 ---@return boolean counted whether the line counted as learning a pet ability
 function ns.SimulateChat(msg)
     local wasReady, wasAtTrainer = ready, atTrainer
-    ready, atTrainer = true, false
+    ready, atTrainer, simulating = true, false, true
     wipe(lastShown)
     local counted = OnChat(msg)
-    ready, atTrainer = wasReady, wasAtTrainer
+    ready, atTrainer, simulating = wasReady, wasAtTrainer, false
     return counted
 end

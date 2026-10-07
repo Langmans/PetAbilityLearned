@@ -35,7 +35,7 @@ function SpellLink(id, name)
     return ("|cff71d5ff|Hspell:%d:0|h[%s]|h|r"):format(id, name)
 end
 
----@param opts {locale: string?, class: string?, savedDB: table?, oldSpellAPI: boolean?, oldSpellBookAPI: boolean?, noPetSpellAPI: boolean?, noLearnStrings: boolean?, noMasks: boolean?, noTextureAPI: boolean?, noPortraitAPI: boolean?, oldCheckButton: boolean?, knownEvents: table?, metadata: table?, noAddOnsAPI: boolean?}?
+---@param opts {locale: string?, class: string?, savedDB: table?, savedDBPC: table?, oldSpellAPI: boolean?, oldSpellBookAPI: boolean?, noPetSpellAPI: boolean?, noLearnStrings: boolean?, noMasks: boolean?, noTextureAPI: boolean?, noPortraitAPI: boolean?, oldCheckButton: boolean?, knownEvents: table?, metadata: table?, noAddOnsAPI: boolean?}?
 function NewClient(opts)
     opts = opts or {}
     -- opts.locale: the client's language. Spell names and the learn line exist here for enUS and
@@ -69,8 +69,9 @@ function NewClient(opts)
     function GetTime()
         return client.time
     end
+    -- Whole seconds, like the client.
     function GetServerTime()
-        return client.time
+        return math.floor(client.time)
     end
     function UnitClass()
         local classFile = opts.class or "HUNTER"
@@ -360,8 +361,17 @@ function NewClient(opts)
         end,
     }
 
+    -- client.zone: where the player is.
+    client.zone = "Darkshore"
+    function GetZoneText()
+        return client.zone
+    end
+    -- WoW's date is Lua's os.date.
+    date = os.date
+
     SlashCmdList = {}
     PetAbilityLearnedDB = opts.savedDB
+    PetAbilityLearnedDBPC = opts.savedDBPC
 
     local ns = {}
     for _, file in ipairs(TOC_FILES) do
@@ -446,4 +456,8 @@ end
 
 function Saved()
     return PetAbilityLearnedDB
+end
+
+function SavedPC()
+    return PetAbilityLearnedDBPC
 end

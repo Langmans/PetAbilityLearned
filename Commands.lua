@@ -12,6 +12,7 @@ local CLAW, CLAW_RANK_2 = 16827, 16828
 local COMMAND_LIST = table.concat({
     "/pal test [name]",
     "/pal sim [name]",
+    "/pal history [count]",
     "/pal duration <seconds>",
     "/pal scale <0.3-3>",
     "/pal sound family|levelup|off",
@@ -114,6 +115,23 @@ function Commands.sound(rest)
     local db = ns.db
     db.sound = mode
     Print(SOUND_SET[mode])
+end
+
+---/pal history [count]: the last learns this character made, newest last (10 by default).
+function Commands.history(rest)
+    local history = ns.char.history
+    if #history == 0 then return Print(L.HISTORY_EMPTY) end
+    local count = math.max(1, math.floor(tonumber(firstWord(rest)) or 10))
+    local first = math.max(1, #history - count + 1)
+    Print(ns.Format("HISTORY_TITLE", #history - first + 1, #history))
+    for i = first, #history do
+        local entry = history[i]
+        local line = date("%Y-%m-%d %H:%M", entry.t) .. "  " .. entry.name
+        if entry.rank then line = line .. " (" .. entry.rank .. ")" end
+        if entry.pet then line = line .. ", " .. ns.Format("HISTORY_FROM", entry.pet) end
+        if entry.zone then line = line .. ", " .. entry.zone end
+        Print(line)
+    end
 end
 
 function Commands.reset()

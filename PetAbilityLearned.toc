@@ -4,6 +4,7 @@
 ## Author: Langmans
 ## Version: 1.0.0
 ## SavedVariables: PetAbilityLearnedDB
+## SavedVariablesPerCharacter: PetAbilityLearnedDBPC
 ## IconTexture: Interface\Icons\Ability_Hunter_BeastTraining
 ## X-License: MIT
 ## X-Website: https://github.com/Langmans/PetAbilityLearned
@@ -16,6 +17,7 @@ Locales\koKR.lua
 Locales\ruRU.lua
 Locale.lua
 Core.lua
+History.lua
 Splash.lua
 Detect.lua
 Commands.lua

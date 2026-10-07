@@ -37,6 +37,12 @@ ns.Locales.enUS = {
         SOUND_LEVELUP = "Sound: the level-up sound.",
         SOUND_OFF = "Sound off.",
         POSITION_RESET = "Splash position reset.",
+        -- /pal history.
+        HISTORY_EMPTY = "This character has not learned a pet ability since the addon was installed.",
+        -- How many are listed, how many there are.
+        HISTORY_TITLE = "Pet abilities learned on this character (last %d of %d):",
+        -- The pet's name.
+        HISTORY_FROM = "from %s",
         DEBUG_ON = "Debug on.",
         DEBUG_OFF = "Debug off.",
         OPTIONS_AFTER_COMBAT = "In combat: the options open when combat ends.",
