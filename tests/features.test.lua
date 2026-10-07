@@ -92,7 +92,7 @@ test("at login, a pet out says what it can teach that is not known", function()
 end)
 
 test("summoning a pet says what it can teach, once per new list", function()
-    local client = NewClient({ savedDBPC = { known = { Claw = 1 }, craftRead = true } }):login()
+    local client = NewClient({ savedDBPC = { known = { Claw = 1 }, trainingRead = true } }):login()
     ok(client:printedContains("Nightstalker can teach you: Claw (Rank 2)."))
     ok(not client:printedContains("Open Beast Training once"), "the window was read before")
     client.printed = {}
@@ -130,7 +130,7 @@ test("UNIT_PET before the login wait is over is ignored", function()
 end)
 
 test("a pet spell without a rank counts as rank 1", function()
-    local client = NewClient({ savedDBPC = { craftRead = true } }):login(false)
+    local client = NewClient({ savedDBPC = { trainingRead = true } }):login(false)
     client.pet.spells = { { name = "Bite" } } -- no rank text and no spell ID to read one from
     client:advance(5)
     ok(client:printedContains("Nightstalker can teach you: Bite."))
@@ -148,49 +148,95 @@ test("/pal hints on|off", function()
     ok(client:printedContains("Commands:"))
 end)
 
-test("opening Beast Training reads the hunter's ranks", function()
+test("opening Beast Training reads the hunter's ranks from the rows' spells", function()
     local client = NewClient():login()
-    client.crafts = {
-        { "Pet abilities", nil, "header" },
-        { "Claw", "Rank 3", "available" },
-        { "Growl", "Rank 2", "used" },
-        { "", "Rank 1", "available" },
-        { 5, "Rank 1", "available" },
+    client.trainer = {
+        { "Pet abilities", "header", 16827 },
+        { "Claw", "available", 16828 },
+        { "Growl", "available", 2649 },
+        { "Bite", "available", nil },
     }
-    client:fire("CRAFT_SHOW")
-    eq(SavedPC().known.Claw, 3)
-    eq(SavedPC().known.Growl, 2)
-    eq(SavedPC().craftRead, true)
-    client.crafts[#client.crafts + 1] = { "Cower", "Rank 2", "available" }
-    client:fire("CRAFT_UPDATE")
-    eq(SavedPC().known.Cower, 2)
+    client:fire("TRAINER_SHOW")
+    eq(SavedPC().known.Claw, 2, "rank from the spell, not the row")
+    eq(SavedPC().known.Growl, 1, "trainer abilities are known ranks too")
+    eq(SavedPC().known.Bite, nil, "no spell behind the row, so no rank")
+    eq(SavedPC().known["Pet abilities"], nil, "headers are skipped")
+    eq(SavedPC().trainingRead, true)
+    client.trainer[#client.trainer + 1] = { "Bite", "available", 17253 }
+    client:fire("TRAINER_UPDATE")
+    eq(SavedPC().known.Bite, 1)
 end)
 
-test("an empty window, a failing call or a client without the Craft API reads nothing", function()
+test("a pet trainer's window (with an NPC) is not read", function()
     local client = NewClient():login()
-    client:fire("CRAFT_SHOW")
-    eq(SavedPC().craftRead, nil, "no rows")
-    GetNumCrafts = function()
+    client.npc = true
+    client.trainer = { { "Claw", "available", 16828 } }
+    client:fire("TRAINER_SHOW")
+    eq(SavedPC().known.Claw, nil)
+    eq(SavedPC().trainingRead, nil)
+end)
+
+test("an empty window, a failing call or a client without the trainer API reads nothing", function()
+    local client = NewClient():login()
+    client:fire("TRAINER_SHOW")
+    eq(SavedPC().trainingRead, nil, "no rows")
+    GetNumTrainerServices = function()
         error("boom")
     end
-    client:fire("CRAFT_SHOW")
-    eq(SavedPC().craftRead, nil)
-    client.crafts = { { "Claw", "Rank 3", "available" } }
-    GetNumCrafts = function()
+    client:fire("TRAINER_UPDATE")
+    eq(SavedPC().trainingRead, nil)
+    client.trainer = { { "Claw", "available", 16828 } }
+    GetNumTrainerServices = function()
         return 1
     end
-    GetCraftInfo = function()
+    GetTrainerServiceInfo = function()
         error("boom")
     end
-    client:fire("CRAFT_UPDATE")
+    client:fire("TRAINER_UPDATE")
     eq(SavedPC().known.Claw, nil)
 
-    client = NewClient({ noCraftAPI = true }):login()
-    client:fire("CRAFT_SHOW")
-    eq(SavedPC().craftRead, nil)
+    client = NewClient({ noTrainerAPI = true }):login()
+    client:fire("TRAINER_SHOW")
+    eq(SavedPC().trainingRead, nil)
 end)
 
-test("a saved craftRead that is not true is dropped", function()
-    NewClient({ savedDBPC = { craftRead = "yes" } }):login()
-    eq(SavedPC().craftRead, nil)
+test("a tooltip that cannot show the row gives no rank", function()
+    local client = NewClient():login()
+    client.trainer = { { "Claw", "available", 16828 } }
+    for _, frame in ipairs(client.frames) do
+        if frame.kind == "GameTooltip" then
+            frame.SetTrainerService = function()
+                error("boom")
+            end
+        end
+    end
+    client:fire("TRAINER_SHOW")
+    eq(SavedPC().known.Claw, nil)
+end)
+
+test("a saved trainingRead that is not true is dropped", function()
+    NewClient({ savedDBPC = { trainingRead = "yes" } }):login()
+    eq(SavedPC().trainingRead, nil)
+end)
+
+test("closing Beast Training with TRADE_SKILL_CLOSE ends the trainer guard", function()
+    local client = NewClient():login()
+    client:fire("TRAINER_SHOW")
+    client:fire("TRADE_SKILL_CLOSE")
+    client:chat(client:learnLine("Claw (Rank 2)"))
+    client:advance(0.3)
+    eq(client:splashName(), "Claw")
+end)
+
+test("a trainer window that is no longer shown ends the guard, even without a close event", function()
+    local client = NewClient():login()
+    ClassTrainerFrame = CreateFrame("Frame")
+    client:fire("TRAINER_SHOW")
+    client:chat(client:learnLine("Claw (Rank 2)"))
+    client:advance(0.3)
+    eq(client:splashName(), nil, "still open")
+    ClassTrainerFrame:Hide()
+    client:chat(client:learnLine("Claw (Rank 2)"))
+    client:advance(0.3)
+    eq(client:splashName(), "Claw")
 end)

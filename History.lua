@@ -19,7 +19,7 @@ local MAX_HISTORY = 200
 ---@class CharacterData
 ---@field history HistoryEntry[] oldest first, at most MAX_HISTORY
 ---@field known table<string, number> ability name -> highest rank number known
----@field craftRead boolean? whether the Beast Training window has been read: then `known` is
+---@field trainingRead boolean? whether the Beast Training window has been read: then `known` is
 ---complete, and an ability missing from it is one this character does not have
 
 ---The character's data: empty until LoadCharacterData runs on ADDON_LOADED.
@@ -72,7 +72,7 @@ function ns.LoadCharacterData()
         if type(name) == "string" and type(rank) == "number" then known[name] = rank end
     end
     saved.history, saved.known = history, known
-    saved.craftRead = saved.craftRead == true or nil
+    saved.trainingRead = saved.trainingRead == true or nil
     ---@type CharacterData
     ns.char = saved
 end

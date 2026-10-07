@@ -5,34 +5,56 @@ local _, ns = ...
 -- a higher rank are named in chat: "Fluffy can teach you: Claw (Rank 3)."
 --
 -- What the character knows comes from every learn the addon saw, and from the Beast Training
--- window, read whenever it opens: each row there is an ability the hunter has learned. Until that
--- window has been read once, an ability missing from what is known may simply not have been seen
--- yet, so the hint then adds that opening Beast Training once makes it complete.
+-- window, read whenever it opens. Until that window has been read once, an ability missing from
+-- what is known may simply not have been seen yet, so the hint then adds that opening Beast
+-- Training once makes it complete.
+--
+-- On Forever, Beast Training is the trainer window (ClassTrainerFrame), opened by TRAINER_SHOW
+-- with no NPC; a pet trainer is the same window with an NPC, selling ranks the hunter does not
+-- have yet. Every row of Beast Training is a rank the hunter has learned, but only those the pet
+-- out can be taught: its family's abilities. GetTrainerServiceInfo gives the name, not the rank,
+-- so the row's spell ID comes from a hidden tooltip and the rank from that spell.
 
 -- The last list said for each pet, so summoning the same pet again stays quiet until there is
 -- something new to say.
 ---@type table<string, string>
 local lastSaid = {}
 
----Reads the hunter's learned ranks from the Beast Training window (the Craft API), when the
----client has it and the window is showing Beast Training.
+local scanTip = CreateFrame("GameTooltip", "PetAbilityLearnedScanTooltip", nil, "GameTooltipTemplate")
+
+---The spell behind a trainer row, through the hidden tooltip.
+---@param index number
+---@return number?
+local function ServiceSpellID(index)
+    scanTip:SetOwner(WorldFrame, "ANCHOR_NONE")
+    local ok = pcall(scanTip.SetTrainerService, scanTip, index)
+    ---@type string?, number?
+    local _, spellID = scanTip:GetSpell()
+    scanTip:Hide()
+    return ok and spellID or nil
+end
+
+---Reads the hunter's learned ranks from the Beast Training window. A trainer window with an NPC
+---is a pet trainer's (ranks for sale, not known), and is left alone.
 function ns.ReadBeastTraining()
-    if not (GetNumCrafts and GetCraftInfo) then return end
+    if UnitExists("npc") or not GetNumTrainerServices then return end
     ---@type boolean, GameValue
-    local okCount, rows = pcall(GetNumCrafts)
+    local okCount, rows = pcall(GetNumTrainerServices)
     local count = okCount and tonumber(rows) or 0
-    local read = false
+    local read = 0
     for i = 1, count do
-        local ok, name, rank, kind = pcall(GetCraftInfo, i)
-        if ok and type(name) == "string" and name ~= "" and kind ~= "header" then
-            ns.MarkKnown(name, ns.RankNumber(type(rank) == "string" and rank or nil))
-            read = true
+        local ok, name, kind = pcall(GetTrainerServiceInfo, i)
+        local spellID = ok and type(name) == "string" and kind ~= "header" and ServiceSpellID(i) or nil
+        if spellID then
+            local _, rank = ns.SpellInfo(spellID)
+            ns.MarkKnown(name --[[@as string]], ns.RankNumber(rank))
+            read = read + 1
         end
     end
-    if read then
+    if read > 0 then
         local char = ns.char
-        char.craftRead = true
-        ns.Debug(("Beast Training read: %d rows"):format(count))
+        char.trainingRead = true
+        ns.Debug(("Beast Training read: %d of %d rows"):format(read, count))
     end
 end
 
@@ -67,5 +89,5 @@ function ns.CheckPetHints()
     if said == "" or lastSaid[pet] == said then return end
     lastSaid[pet] = said
     ns.Print(ns.Format("HINT_TEACHES", pet, said))
-    if unsure and not ns.char.craftRead then ns.Print(ns.L.HINT_OPEN_TRAINING) end
+    if unsure and not ns.char.trainingRead then ns.Print(ns.L.HINT_OPEN_TRAINING) end
 end

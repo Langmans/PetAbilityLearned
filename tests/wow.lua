@@ -35,7 +35,7 @@ function SpellLink(id, name)
     return ("|cff71d5ff|Hspell:%d:0|h[%s]|h|r"):format(id, name)
 end
 
----@param opts {locale: string?, class: string?, savedDB: table?, savedDBPC: table?, oldSpellAPI: boolean?, oldSpellBookAPI: boolean?, noPetSpellAPI: boolean?, noLearnStrings: boolean?, noMasks: boolean?, noTextureAPI: boolean?, noPortraitAPI: boolean?, oldCheckButton: boolean?, knownEvents: table?, metadata: table?, noAddOnsAPI: boolean?, oldTrainingPointsAPI: boolean?, noTrainingPointsAPI: boolean?, noCraftAPI: boolean?, oldSlider: boolean?}?
+---@param opts {locale: string?, class: string?, savedDB: table?, savedDBPC: table?, oldSpellAPI: boolean?, oldSpellBookAPI: boolean?, noPetSpellAPI: boolean?, noLearnStrings: boolean?, noMasks: boolean?, noTextureAPI: boolean?, noPortraitAPI: boolean?, oldCheckButton: boolean?, knownEvents: table?, metadata: table?, noAddOnsAPI: boolean?, oldTrainingPointsAPI: boolean?, noTrainingPointsAPI: boolean?, noTrainerAPI: boolean?, oldSlider: boolean?}?
 function NewClient(opts)
     opts = opts or {}
     -- opts.locale: the client's language. Spell names and the learn line exist here for enUS and
@@ -79,7 +79,7 @@ function NewClient(opts)
         return classFile, classFile
     end
     function UnitExists(unit)
-        return unit == "player" or (unit == "pet" and client.pet ~= nil)
+        return unit == "player" or (unit == "pet" and client.pet ~= nil) or (unit == "npc" and client.npc == true)
     end
     function UnitName(unit)
         if unit == "player" then return "Langmans" end
@@ -325,6 +325,16 @@ function NewClient(opts)
                 return self.checked and 1 or nil
             end
         end
+        -- A GameTooltip set to a trainer row reports that row's spell, like the client.
+        if kind == "GameTooltip" then
+            function frame:SetTrainerService(index)
+                local row = client.trainer[index]
+                self.spell = row and row[3]
+            end
+            function frame:GetSpell()
+                return nil, rawget(self, "spell")
+            end
+        end
         -- Like OptionsSliderTemplate: its labels as parentKeys, or with opts.oldSlider only as
         -- global names ($parentText, ...) and without SetObeyStepOnDrag. SetValue reports a
         -- change through OnValueChanged, as the client does.
@@ -405,20 +415,23 @@ function NewClient(opts)
         C_PetInfo = { GetPetTrainingPoints = trainingPoints }
     end
 
-    -- client.crafts: the rows of the Beast Training window, each { name, rank, kind }; absent
-    -- API with opts.noCraftAPI.
-    client.crafts = {}
-    if opts.noCraftAPI then
-        GetNumCrafts, GetCraftInfo = nil, nil
+    -- client.trainer: the rows of the open trainer window, each { name, kind, spellID }, as
+    -- Forever's Beast Training gives them (GetTrainerServiceInfo: name, "available"/"header",
+    -- icon). The spell ID only comes out of a tooltip (SetTrainerService, then GetSpell). No
+    -- trainer API with opts.noTrainerAPI. client.npc: whether an NPC is being talked to.
+    client.trainer = {}
+    if opts.noTrainerAPI then
+        GetNumTrainerServices, GetTrainerServiceInfo = nil, nil
     else
-        function GetNumCrafts()
-            return #client.crafts
+        function GetNumTrainerServices()
+            return #client.trainer
         end
-        function GetCraftInfo(index)
-            local row = client.crafts[index]
-            return row[1], row[2], row[3]
+        function GetTrainerServiceInfo(index)
+            local row = client.trainer[index]
+            return row[1], row[2], 132140
         end
     end
+    ClassTrainerFrame = nil
 
     -- client.zone: where the player is.
     client.zone = "Darkshore"

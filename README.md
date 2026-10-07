@@ -181,7 +181,7 @@ in a later version so reaches everyone who never changed it. Until
 Per character, `PetAbilityLearnedDBPC` holds `history` (the last 200 learns,
 oldest first, each with `name`, `rank`, `pet`, `familyID`, `zone` and `t`, the
 server time), `known` (ability name → the highest rank number known) and
-`craftRead` (true once the Beast Training window was read). Broken entries are
+`trainingRead` (true once the Beast Training window was read). Broken entries are
 dropped on load.
 
 ### How it works
@@ -230,11 +230,20 @@ dropped on load.
 - Hints: on `UNIT_PET` for the player (a second later, when the pet's
   spellbook is filled) and once after login, the pet's spells that are
   abilities learned in the wild are compared with `known`; those at a higher
-  rank are named in chat. The same list is not repeated for the same pet. On
-  `CRAFT_SHOW` and `CRAFT_UPDATE`, every row of the Beast Training window
-  (`GetNumCrafts`, `GetCraftInfo`) that is not a header raises `known`, and
-  `craftRead` is set: until then an ability missing from `known` may just not
-  have been seen, so the hint asks to open the window once.
+  rank are named in chat. The same list is not repeated for the same pet.
+- On Forever, Beast Training is the trainer window (`ClassTrainerFrame`, no
+  Craft API), opened by `TRAINER_SHOW` without an NPC; a pet trainer is the
+  same window with one, and is not read. Each row (`GetNumTrainerServices`,
+  `GetTrainerServiceInfo`) is a rank the hunter knows, of the abilities the pet
+  out's family can learn. The row gives the name; its spell ID comes from a
+  hidden tooltip (`SetTrainerService`, `GetSpell`) and the rank from that
+  spell. Reading raises `known` and sets `trainingRead`: until then an
+  ability missing from `known` may just not have been seen, so the hint asks
+  to open the window once. `TRAINER_UPDATE` reads it again.
+- While a trainer window is open, learns are ignored. It counts as closed on
+  `TRAINER_CLOSED`, on `TRADE_SKILL_CLOSE` (what Forever sent when Beast
+  Training closed), and whenever `ClassTrainerFrame` is no longer shown, so a
+  missed close event cannot leave learns ignored.
 
 ### Localization
 

@@ -153,6 +153,15 @@ local function Flush()
     })
 end
 
+---Whether a trainer window (a pet trainer's, or Beast Training) is open. The flag comes from the
+---events; the window itself has the last word, so a close event the client does not send cannot
+---leave learns ignored for the rest of the session.
+---@return boolean
+local function TrainerOpen()
+    if atTrainer and ClassTrainerFrame and not ClassTrainerFrame:IsShown() then atTrainer = false end
+    return atTrainer
+end
+
 -- Returns true when the learn counts as a pet ability (shown now or merged into a pending one).
 ---@param name string? the learned spell's name, possibly with its rank in parentheses
 ---@param rank string?
@@ -165,7 +174,7 @@ local function Learned(name, rank, spellID)
         ns.Debug("ignored: still in the login wait")
         return false
     end
-    if atTrainer then
+    if TrainerOpen() then
         ns.Debug("ignored: a trainer window is open")
         return false
     end
@@ -256,10 +265,10 @@ function frame:ADDON_LOADED(name)
         "LEARNED_SPELL_IN_TAB",
         "LEARNED_SPELL_IN_SKILL_LINE",
         "TRAINER_SHOW",
+        "TRAINER_UPDATE",
         "TRAINER_CLOSED",
+        "TRADE_SKILL_CLOSE",
         "UNIT_PET",
-        "CRAFT_SHOW",
-        "CRAFT_UPDATE",
     }) do
         pcall(self.RegisterEvent, self, event) -- not every client has every event
     end
@@ -285,14 +294,6 @@ function frame:UNIT_PET(unit)
     C_Timer.After(1, ns.CheckPetHints)
 end
 
-function frame:CRAFT_SHOW()
-    ns.ReadBeastTraining()
-end
-
-function frame:CRAFT_UPDATE()
-    ns.ReadBeastTraining()
-end
-
 ---@param msg string
 function frame:CHAT_MSG_SYSTEM(msg)
     OnChat(msg)
@@ -308,15 +309,24 @@ function frame:LEARNED_SPELL_IN_SKILL_LINE(spellID)
     SpellbookLearned("LEARNED_SPELL_IN_SKILL_LINE", spellID)
 end
 
+-- The trainer window: a pet trainer's, or Beast Training (Hints.lua reads the latter).
 function frame:TRAINER_SHOW()
     atTrainer = true
     ns.Debug("trainer window open: learns are ignored")
+    ns.ReadBeastTraining()
+end
+
+function frame:TRAINER_UPDATE()
+    ns.ReadBeastTraining()
 end
 
 function frame:TRAINER_CLOSED()
     atTrainer = false
     ns.Debug("trainer window closed")
 end
+
+-- What Forever sent when Beast Training closed; it closes the trainer window as well.
+frame.TRADE_SKILL_CLOSE = frame.TRAINER_CLOSED
 
 frame:SetScript("OnEvent", function(
     self,
