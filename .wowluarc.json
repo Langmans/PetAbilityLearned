@@ -1,6 +1,25 @@
 {
-    "flavors": ["forever", "classic_era", "classic"],    "ignore": ["tests/", "node_modules/", "coverage/"],
+    "flavors": ["forever", "classic_era", "classic"],
+    "library": ["annotations/"],
+    "ignore": ["tests/", "node_modules/", "coverage/"],
+    "globals": {
+        "write": ["PetAbilityLearnedDB", "PetAbilityLearnedDBPC"]
+    },
     "diagnostics": {
-        "enable": ["need-check-nil"]
+        "enable": [
+            "need-check-nil",
+            "unknown-local-type",
+            "unknown-param-type",
+            "unknown-return-type",
+            "unknown-field-type",
+            "incomplete-signature-doc"
+        ],
+        "severity": {
+            "unknown-local-type": "warning",
+            "unknown-param-type": "warning",
+            "unknown-return-type": "warning",
+            "unknown-field-type": "warning",
+            "incomplete-signature-doc": "warning"
+        }
     }
 }

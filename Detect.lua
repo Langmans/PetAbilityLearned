@@ -328,13 +328,14 @@ end
 -- What Forever sent when Beast Training closed; it closes the trainer window as well.
 frame.TRADE_SKILL_CLOSE = frame.TRAINER_CLOSED
 
-frame:SetScript("OnEvent", function(
-    self,
-    event --[[@as string]],
-    ...
-)
+---Hands an event to the method of the same name.
+---@param self Frame
+---@param event string
+---@param ... GameValue the event's arguments
+local function OnEvent(self, event, ...)
     self[event](self, ...)
-end)
+end
+frame:SetScript("OnEvent", OnEvent)
 frame:RegisterEvent("ADDON_LOADED")
 
 ---For /pal sim: feed a system chat line through the real detection, as if it had just arrived.

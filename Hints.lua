@@ -28,7 +28,6 @@ local scanTip = CreateFrame("GameTooltip", "PetAbilityLearnedScanTooltip", nil, 
 local function ServiceSpellID(index)
     scanTip:SetOwner(WorldFrame, "ANCHOR_NONE")
     local ok = pcall(scanTip.SetTrainerService, scanTip, index)
-    ---@type string?, number?
     local _, spellID = scanTip:GetSpell()
     scanTip:Hide()
     return ok and spellID or nil

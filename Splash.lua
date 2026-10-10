@@ -124,6 +124,7 @@ local GlowTextMethods = {}
 
 ---Calls a FontString method with the same arguments on the text and all its copies.
 ---@param method string
+---@param ... GameValue the method's arguments
 function GlowTextMethods:Set(method, ...)
     for _, fs in ipairs(self.layers) do
         fs[method](fs, ...)

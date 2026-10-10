@@ -185,14 +185,22 @@ local function AddSlider(name, key, low, high, step, format)
     return slider
 end
 
----@type Slider
-ns.DurationSlider = AddSlider("PetAbilityLearnedDurationSlider", "duration", 1, 30, 1, function(value)
+---@param value number whole seconds
+---@return string
+local function DurationTitle(value)
     return ns.Format("OPTION_DURATION", value)
-end)
----@type Slider
-ns.ScaleSlider = AddSlider("PetAbilityLearnedScaleSlider", "scale", 0.3, 3, 0.05, function(value)
+end
+
+---@param value number
+---@return string
+local function ScaleTitle(value)
     return ns.Format("OPTION_SCALE", value)
-end)
+end
+
+---@type Slider
+ns.DurationSlider = AddSlider("PetAbilityLearnedDurationSlider", "duration", 1, 30, 1, DurationTitle)
+---@type Slider
+ns.ScaleSlider = AddSlider("PetAbilityLearnedScaleSlider", "scale", 0.3, 3, 0.05, ScaleTitle)
 
 ---A check button's label: the parentKey Text on newer clients, text on older ones (the language
 ---server's stubs know neither, hence rawget).
@@ -207,14 +215,14 @@ local soundLabel = content:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
 -- Below the slider's own low/high labels.
 Place(soundLabel, 0, 28)
 soundLabel:SetText(L.OPTION_SOUND)
----@type table<SoundMode, CheckButton>
+---@type table<PetAbilityLearnedSoundMode, CheckButton>
 local soundButtons = {}
 for _, choice in ipairs({
     { "family", L.OPTION_SOUND_FAMILY },
     { "levelup", L.OPTION_SOUND_LEVELUP },
     { "off", L.OPTION_SOUND_OFF },
 }) do
-    ---@type SoundMode
+    ---@type PetAbilityLearnedSoundMode
     local mode = choice[1]
     local radio = CreateFrame("CheckButton", nil, content, "UIRadioButtonTemplate")
     Place(radio, 0, 6)
@@ -341,11 +349,6 @@ end
 panel.OnRefresh = Refresh
 panel:SetScript("OnShow", Refresh)
 
----What Settings.RegisterCanvasLayoutCategory returns; the language server's stubs leave it untyped.
----@class SettingsCategory
----@field GetID fun(self: SettingsCategory): string|number
-
----@type SettingsCategory
 local category = Settings.RegisterCanvasLayoutCategory(panel, L.OPTIONS_TITLE)
 Settings.RegisterAddOnCategory(category)
 

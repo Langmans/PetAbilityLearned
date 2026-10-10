@@ -170,6 +170,17 @@ In `.toc` order; all share the addon namespace `ns`.
   (`GetAddOnMetadata`), the settings (sliders, sound radio buttons,
   checkboxes, the test and sim buttons), and the history list.
 
+Not in the `.toc`, for the editor only, in `annotations\` (WoW Lua LS reads it
+as a library through `.wowluarc.json`):
+
+- `PetAbilityLearned.lua` — the addon's own data: the saved settings
+  (`PetAbilityLearnedSettings`), the per-character data
+  (`PetAbilityLearnedCharacter`, `PetAbilityLearnedHistoryEntry`), the sound
+  modes and the locale entries.
+- `Forever.lua` — stubs for game API the language server knows loosely or
+  not at all on Forever: the trainer rows, the tooltip's `SetTrainerService`
+  and `GetSpell`, and `Settings.RegisterCanvasLayoutCategory`.
+
 The settings are saved account-wide in `PetAbilityLearnedDB`: `duration`
 (whole seconds, from 1), `scale` (0.3 to 3), `sound` (`"family"`,
 `"levelup"` or `"off"`), `screenshot`, `hints` and `debug` (booleans), and

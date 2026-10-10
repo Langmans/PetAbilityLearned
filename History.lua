@@ -7,23 +7,9 @@ local _, ns = ...
 
 local MAX_HISTORY = 200
 
----One learn as kept in the history.
----@class HistoryEntry
----@field name string the ability's name, in the client's language at the time
----@field rank string? the rank text ("Rank 2")
----@field pet string? the name of the pet that taught it, when it was out
----@field familyID number? that pet's CreatureFamily ID
----@field zone string? where it happened
----@field t number server time
-
----@class CharacterData
----@field history HistoryEntry[] oldest first, at most MAX_HISTORY
----@field known table<string, number> ability name -> highest rank number known
----@field trainingRead boolean? whether the Beast Training window has been read: then `known` is
----complete, and an ability missing from it is one this character does not have
-
----The character's data: empty until LoadCharacterData runs on ADDON_LOADED.
----@type CharacterData
+---The character's data: empty until LoadCharacterData runs on ADDON_LOADED. Its fields are
+---described in annotations\PetAbilityLearned.lua (PetAbilityLearnedCharacter).
+---@type PetAbilityLearnedCharacter
 ns.char = { history = {}, known = {} }
 
 ---The number in a rank text, whatever the language calls it: "Rank 2", "Rang 2", "2 레벨" -> 2.
@@ -37,7 +23,7 @@ end
 
 ---An entry as saved, or nil when it is broken.
 ---@param saved GameValue
----@return HistoryEntry?
+---@return PetAbilityLearnedHistoryEntry?
 local function cleanEntry(saved)
     if type(saved) ~= "table" then return nil end
     ---@type table<string, GameValue>
@@ -60,7 +46,7 @@ function ns.LoadCharacterData()
     if type(PetAbilityLearnedDBPC) ~= "table" then PetAbilityLearnedDBPC = {} end
     ---@type table<string, GameValue>
     local saved = PetAbilityLearnedDBPC
-    ---@type HistoryEntry[]
+    ---@type PetAbilityLearnedHistoryEntry[]
     local history = {}
     for _, entry in ipairs(type(saved.history) == "table" and saved.history or {}) do
         local clean = cleanEntry(entry)
@@ -73,7 +59,7 @@ function ns.LoadCharacterData()
     end
     saved.history, saved.known = history, known
     saved.trainingRead = saved.trainingRead == true or nil
-    ---@type CharacterData
+    ---@type PetAbilityLearnedCharacter
     ns.char = saved
 end
 
@@ -94,7 +80,7 @@ function ns.MarkKnown(name, rank)
 end
 
 ---One history line: "2026-10-07 14:03  Claw (Rank 2), from Fluffy, Darkshore".
----@param entry HistoryEntry
+---@param entry PetAbilityLearnedHistoryEntry
 ---@return string
 function ns.FormatHistoryEntry(entry)
     ---@type string
@@ -106,7 +92,7 @@ function ns.FormatHistoryEntry(entry)
 end
 
 ---Adds a learn to the history and to what is known.
----@param entry HistoryEntry
+---@param entry PetAbilityLearnedHistoryEntry
 function ns.RecordLearn(entry)
     local history = ns.char.history
     history[#history + 1] = entry

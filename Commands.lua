@@ -48,21 +48,21 @@ local function onOffName(on)
 end
 
 -- How each sound mode is named in the status line.
----@type table<SoundMode, string>
+---@type table<PetAbilityLearnedSoundMode, string>
 local SOUND_NAMES = { family = L.SOUND_NAME_FAMILY, levelup = L.SOUND_NAME_LEVELUP, off = L.STATUS_OFF }
 
 -- What /pal sound takes: the mode names, and "on" for the default.
----@type table<string, SoundMode>
+---@type table<string, PetAbilityLearnedSoundMode>
 local SOUND_WORDS = { family = "family", on = "family", levelup = "levelup", ["level-up"] = "levelup", off = "off" }
 
 -- What /pal sound answers for each mode.
----@type table<SoundMode, string>
+---@type table<PetAbilityLearnedSoundMode, string>
 local SOUND_SET = { family = L.SOUND_FAMILY, levelup = L.SOUND_LEVELUP, off = L.SOUND_OFF }
 
 ---The current settings and the list of commands.
 local function status()
     if not ns.isHunter then Print(L.NOT_HUNTER) end
-    ---@type Settings
+    ---@type PetAbilityLearnedSettings
     local db = ns.db
     Print(
         ns.Format(

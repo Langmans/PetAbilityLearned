@@ -6,12 +6,9 @@ local _, ns = ...
 -- through a metatable. A key missing from enUS as well returns the key itself, so a typo shows up
 -- in game instead of erroring on a nil concatenation.
 
----@class Locale
----@field strings table<string, string>
-
----@type Locale
+---@type PetAbilityLearnedLocale
 local enUS = ns.Locales.enUS
----@type Locale
+---@type PetAbilityLearnedLocale
 local current = ns.Locales[GetLocale()] or enUS
 ns.LocaleCode = ns.Locales[GetLocale()] and GetLocale() or "enUS"
 
@@ -31,6 +28,7 @@ ns.L = current.strings
 
 ---Formats a locale entry with string.format.
 ---@param key string
+---@param ... string|number the values for its format directives
 ---@return string
 function ns.Format(key, ...)
     return string.format(ns.L[key], ...)

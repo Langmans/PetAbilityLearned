@@ -9,21 +9,10 @@ local _, ns = ...
 -- Saved account-wide. The saved file keeps only what the player changed: ns.db reads a missing
 -- value from here through a metatable, and StripDefaults removes values equal to their default
 -- at logout. A default changed in a later version so reaches everyone who never changed it.
--- pos has no default: without it the splash sits in its standard spot.
+-- pos has no default: without it the splash sits in its standard spot. The fields are described
+-- in annotations\PetAbilityLearned.lua (PetAbilityLearnedSettings).
 
----@class Settings
----@field duration number whole seconds the splash stays before it fades, from 1
----@field scale number from 0.3 to 3
----@field sound SoundMode
----@field screenshot boolean take a screenshot of each splash
----@field hints boolean say what a new pet can still teach
----@field debug boolean
----@field pos [string, string, number, number]? point, relativePoint, x, y of a dragged splash
-
----What plays with the splash: the pet family's own sound (the level-up sound for a family
----without one), always the level-up sound, or nothing.
----@alias SoundMode "family"|"levelup"|"off"
-
+---The sound modes /pal sound takes (PetAbilityLearnedSoundMode).
 ---@type table<string, true>
 ns.SOUND_MODES = { family = true, levelup = true, off = true }
 
@@ -37,7 +26,7 @@ ns.SOUND_MODES = { family = true, levelup = true, off = true }
 ---@field rank string?
 ---@field icon (number|string)?
 
----@type Settings
+---@type PetAbilityLearnedSettings
 ns.DEFAULTS = {
     duration = 6, -- /pal duration <seconds>
     scale = 1, -- /pal scale <0.3-3>
@@ -49,7 +38,7 @@ ns.DEFAULTS = {
 
 ---The settings: the defaults until LoadSettings replaces them with the saved table on
 ---ADDON_LOADED. Nothing writes to them before then (no command or event runs that early).
----@type Settings
+---@type PetAbilityLearnedSettings
 ns.db = ns.DEFAULTS
 
 ---Whether this character is a hunter; set on ADDON_LOADED.
@@ -85,6 +74,7 @@ function ns.SpellInfo(id)
     if C_Spell and C_Spell.GetSpellSubtext then
         rank = C_Spell.GetSpellSubtext(id)
     elseif GetSpellSubtext then
+        -- The language server's own stub for this global returns any; it gives a rank text or "".
         rank = GetSpellSubtext(id) --[[@as string?]]
     end
     return name, rank ~= "" and rank or nil, icon
@@ -164,7 +154,7 @@ end
 ---client has filled in the saved table.
 function ns.LoadSettings()
     if type(PetAbilityLearnedDB) ~= "table" then PetAbilityLearnedDB = {} end
-    ---@type Settings
+    ---@type PetAbilityLearnedSettings
     local db = PetAbilityLearnedDB
     -- A broken value is dropped, so the default shows through.
     for key, default in pairs(ns.DEFAULTS) do
@@ -178,7 +168,7 @@ function ns.LoadSettings()
     db.duration = math.max(1, math.floor(db.duration))
     db.scale = math.min(3, math.max(0.3, db.scale))
     db.pos = cleanPos(db.pos)
-    ---@type Settings
+    ---@type PetAbilityLearnedSettings
     ns.db = db
 end
 

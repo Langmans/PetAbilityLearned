@@ -8,6 +8,7 @@ manual-changelog:
 
 # Files starting with a dot are left out by the packager already.
 ignore:
+  - annotations
   - coverage
   - node_modules
   - tests
