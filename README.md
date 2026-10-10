@@ -302,14 +302,14 @@ worktree of its own on a local branch, so the game loads a clean checkout
 instead of whatever is half done in the repository:
 
 ```bash
-git branch live main
+git branch wow main
 ```
 
 ```bash
-git worktree add "<WoW>/Interface/AddOns/PetAbilityLearned" live
+git worktree add "<WoW>/Interface/AddOns/PetAbilityLearned" wow
 ```
 
-`live` stays local (it has no upstream, so it is never pushed). To give the
+`wow` stays local (it has no upstream, so it is never pushed). To give the
 game a newer version, fast-forward it to `main`:
 
 ```bash
