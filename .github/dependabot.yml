@@ -1,0 +1,26 @@
+# Monthly update PRs for the dev tooling (npm) and the CI workflows.
+# Each ecosystem is grouped into a single PR. Libraries pulled in through
+# .pkgmeta externals are not covered; the packager fetches those itself.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      dev-tooling:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: chore
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: chore
