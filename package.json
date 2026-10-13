@@ -10,7 +10,7 @@
         "check": "npm run lint && npm test"
     },
     "devDependencies": {
-        "@johnnymorganz/stylua-bin": "2.5.2",
+        "@johnnymorganz/stylua-bin": "2.6.0",
         "fengari": "0.1.5",
         "luaparse": "0.3.1"
     }
