@@ -7,6 +7,10 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    # Also bump indirect dependencies in package-lock.json, so a fix for a
+    # dismissed alert on a transitive package still arrives.
+    allow:
+      - dependency-type: all
     groups:
       dev-tooling:
         patterns:
