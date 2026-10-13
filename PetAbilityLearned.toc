@@ -1,5 +1,6 @@
 ## Interface: 16001
 ## Title: PetAbilityLearned
+## Category: Hunter
 ## Notes: Big on-screen splash when your hunter learns a Beast Training ability from a tamed pet.
 ## Author: Langmans
 ## Version: 1.0.0
