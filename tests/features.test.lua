@@ -136,6 +136,27 @@ test("a pet spell without a rank counts as rank 1", function()
     ok(client:printedContains("Nightstalker can teach you: Bite."))
 end)
 
+test("/pal check says what the pet can teach every time, also with hints off", function()
+    local client = NewClient({ savedDB = { hints = false } }):login()
+    eq(#client.printed, 0)
+    client:slash("check")
+    ok(client:printedContains("Nightstalker can teach you: Claw (Rank 2)."))
+    ok(client:printedContains("Open Beast Training once"), "nothing is known yet")
+    client.printed = {}
+    client:slash("check")
+    ok(client:printedContains("Nightstalker can teach you: Claw (Rank 2)."), "asked again, said again")
+end)
+
+test("/pal check says when the pet has nothing left, or there is no pet", function()
+    local client = NewClient({ savedDBPC = { known = { Claw = 2 } } }):login()
+    client:slash("check")
+    ok(client:printedContains("Nightstalker has nothing left to teach you."))
+    ok(not client:printedContains("Open Beast Training once"), "an empty list is certain")
+    client.pet = nil
+    client:slash("check")
+    ok(client:printedContains("No pet out to check."))
+end)
+
 test("/pal hints on|off", function()
     local client = NewClient():login():slash("hints off")
     eq(Saved().hints, false)

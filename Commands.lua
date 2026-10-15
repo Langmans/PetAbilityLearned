@@ -12,6 +12,7 @@ local CLAW, CLAW_RANK_2 = 16827, 16828
 local COMMAND_LIST = table.concat({
     "/pal test [name]",
     "/pal sim [name]",
+    "/pal check",
     "/pal history [count]",
     "/pal duration <seconds>",
     "/pal scale <0.3-3>",
@@ -162,6 +163,11 @@ function Commands.history(rest)
     for i = first, #history do
         Print(ns.FormatHistoryEntry(history[i]))
     end
+end
+
+---/pal check: what the pet out can still teach you, or that it has nothing left.
+function Commands.check()
+    ns.ReportPetTeachable()
 end
 
 ---/pal screenshot on|off: a screenshot of each splash, off by default.

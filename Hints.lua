@@ -90,3 +90,15 @@ function ns.CheckPetHints()
     ns.Print(ns.Format("HINT_TEACHES", pet, said))
     if unsure and not ns.char.trainingRead then ns.Print(ns.L.HINT_OPEN_TRAINING) end
 end
+
+---/pal check: what the pet out can still teach, said whenever asked, also when that is nothing
+---and with hints off. An empty list is certain: an ability with no known rank always counts as
+---teachable, so only a non-empty one can need Beast Training to be read.
+function ns.ReportPetTeachable()
+    if not UnitExists("pet") then return ns.Print(ns.L.CHECK_NO_PET) end
+    local pet = UnitName("pet") or "?"
+    local list, unsure = Teachable()
+    if #list == 0 then return ns.Print(ns.Format("CHECK_NOTHING", pet)) end
+    ns.Print(ns.Format("HINT_TEACHES", pet, table.concat(list, ", ")))
+    if unsure and not ns.char.trainingRead then ns.Print(ns.L.HINT_OPEN_TRAINING) end
+end

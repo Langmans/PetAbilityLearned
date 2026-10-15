@@ -22,6 +22,8 @@ ns.Locales.enUS = {
         -- "Claw (Rank 3), Dash (Rank 1)".
         HINT_TEACHES = "%s can teach you: %s.",
         HINT_OPEN_TRAINING = "Open Beast Training once so the addon knows your ranks.",
+        CHECK_NOTHING = "%s has nothing left to teach you.",
+        CHECK_NO_PET = "No pet out to check.",
 
         -- /pal. STATUS: duration in seconds, scale, sound (a SOUND_NAME_* or STATUS_OFF), then
         -- screenshot, pet hints and debug on/off, the command list.

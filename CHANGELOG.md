@@ -13,7 +13,8 @@
 - Learned two at once? They show one after the other.
 - When you summon or tame a pet, chat says which abilities it can still
   teach you (`/pal hints on|off`). Open Beast Training once so the addon
-  knows your ranks.
+  knows your ranks. `/pal check` asks at any time, and says when a pet has
+  nothing left to teach.
 - Everything you learned is kept per character: see it in the options panel
   or with `/pal history`.
 - Optional screenshot of each splash (`/pal screenshot on`, off by default).

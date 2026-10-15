@@ -38,7 +38,8 @@ at the edges, the ability's icon in a gold ring, glowing text.
 - When you summon or tame a pet, chat says what it can still teach you:
   "Fluffy can teach you: Claw (Rank 3), Dash (Rank 1)." The addon knows your
   ranks from what it saw you learn and from the Beast Training window, so
-  open that once after installing.
+  open that once after installing. Type `/pal check` to ask at any time; it
+  also says when the pet has nothing left to teach you.
 - Everything you learn is kept per character, with the pet, place and time:
   see it in the panel or with `/pal history`.
 - If you like, a screenshot of each splash (off by default).
@@ -99,6 +100,8 @@ The same settings are chat commands too (`/petabilitylearned` works as well):
   `/pal sound off` nothing.
 - `/pal screenshot on` and `/pal screenshot off` switch the screenshot.
 - `/pal hints on` and `/pal hints off` switch the hints about new pets.
+- `/pal check` says what the pet out can still teach you, or that it has
+  nothing left; it works with the hints off too.
 - `/pal history [count]` lists what this character learned (the last 10,
   or `count`).
 - `/pal reset` puts the splash back in its standard spot.
