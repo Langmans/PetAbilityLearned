@@ -1,5 +1,9 @@
 # Pet Ability Learned
 
+[![Release](https://img.shields.io/github/v/release/Langmans/PetAbilityLearned?include_prereleases&sort=semver)](https://github.com/Langmans/PetAbilityLearned/releases)
+![WoW: Forever](https://img.shields.io/badge/WoW-Forever%20%2816001%29-c79c6e)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](https://github.com/Langmans/PetAbilityLearned/blob/main/LICENSE)
+
 Shows a large splash in the middle of the screen the moment your hunter learns
 a pet ability from a tamed beast:
 
